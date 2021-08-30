@@ -12,6 +12,9 @@
     <artifactId>service</artifactId>
 
     <description>在这个工程中Service中写各个服务的Service</description>
+    <modules>
+        <module>service-product</module>
+    </modules>
 
     <!-- 充当一个父亲工程 -->
     <packaging>pom</packaging>

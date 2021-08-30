@@ -1,0 +1,15 @@
+
+œ
+java:S1186"€Add a nested comment explaining why this method is empty, throw an UnsupportedOperationException or complete the implementation.(åíùçüÿÿÿÿ
+o
+java:S2293"YReplace the type specification in this constructor call with the diamond operator ("<>").(€¸þÃ
+U
+java:S18544":Remove this useless assignment to local variable "result".(Œ¼–Îýÿÿÿÿ
+F
+java:S14814"+Remove this unused "result" local variable.(Œ¼–Îýÿÿÿÿ
+U
+java:S1854C":Remove this useless assignment to local variable "result".(Œ¼–Îýÿÿÿÿ
+F
+java:S1481C"+Remove this unused "result" local variable.(Œ¼–Îýÿÿÿÿ
+\
+java:S1126R"AReplace this if-then-else statement by a single return statement.(Æ¶Áûýÿÿÿÿ
