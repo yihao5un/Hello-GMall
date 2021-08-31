@@ -21,13 +21,19 @@ Tcommon/service-util/src/main/java/com/matrix/gmall/common/config/RedissonConfig
 Tcommon/service-util/src/main/java/com/matrix/gmall/common/config/Swagger2Config.java,2/b/2bd56fbf30c44454eca29cb71a95758b5ebf3528
 
 ]common/service-util/src/main/java/com/matrix/gmall/common/handler/GlobalExceptionHandler.java,8/5/85c1e4331b1303833bc46673455455fb39d484c1
-o
-?model/src/main/java/com/matrix/gmall/model/base/BaseEntity.java,2/8/28cf4d0ccf5a938e1dabf0b90b6dbe1d54225f74
-t
-Dmodel/src/main/java/com/matrix/gmall/model/product/BaseAttrInfo.java,2/1/219d6830348d0733816dbe20501d36ec6bd11120
 =
 model/pom.xml,8/c/8ca5b0c27ca750eb5be7a77252c19a67e5c88065
 j
 :model/src/main/java/com/matrix/gmall/model/list/Goods.java,8/4/84d666322b2f903bb27bd0e79c4dd230a2324937
 q
 Amodel/src/main/java/com/matrix/gmall/model/order/OrderDetail.java,0/4/0427eaf09cd6a7cfe7c9fcab164fe8251433a013
+K
+common/service-util/pom.xml,7/b/7bf4ce2572b7ec64d7f93cfb8da490a785c0d1ed
+>
+common/pom.xml,4/8/488bdbea7e8b73c44bd2a54e63f6012f10969196
+7
+pom.xml,4/4/442292b8a7efeabbe4cc176709b833b1792140ec
+J
+common/common-util/pom.xml,e/1/e11c9af1f3f075911eeeadc65f502a18f63de327
+‚
+Rcommon/service-util/src/main/java/com/matrix/gmall/common/constant/RedisConst.java,7/c/7c2b9acc2662be49a93abca5b9d17ff363f3315b

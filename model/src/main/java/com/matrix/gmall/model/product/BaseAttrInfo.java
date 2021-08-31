@@ -36,7 +36,10 @@ public class BaseAttrInfo extends BaseEntity {
 	@TableField("category_level")
 	private Integer categoryLevel;
 
-	//	平台属性值集合
+	/**
+	 * 在一对多的时候 通过一个List接收
+	 * 平台属性值集合
+	 */
 	@TableField(exist = false)
 	private List<BaseAttrValue> attrValueList;
 
