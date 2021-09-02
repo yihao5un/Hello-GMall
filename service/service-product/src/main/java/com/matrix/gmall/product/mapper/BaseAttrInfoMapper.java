@@ -3,6 +3,7 @@ package com.matrix.gmall.product.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.matrix.gmall.model.product.BaseAttrInfo;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -33,5 +34,7 @@ public interface BaseAttrInfoMapper extends BaseMapper<BaseAttrInfo> {
      * @param category3Id category3Id
      * @return
      */
-    List<BaseAttrInfo> selectBaseAttrInfoList(Long category1Id, Long category2Id, Long category3Id);
+    List<BaseAttrInfo> selectBaseAttrInfoList(@Param("category1Id") Long category1Id,
+                                              @Param("category2Id") Long category2Id,
+                                              @Param("category3Id") Long category3Id);
 }

@@ -40,8 +40,8 @@
         id: 方法名称
         resultMap: 返回结果集映射
         $ , # 区别?
-        $: 有sql 注入风险 不建议使用！
-        #: 没有风险
+        $: 有sql 注入风险 不建议使用！statement
+        #: 没有风险 prepareStatement
     -->
     <select id="selectBaseAttrInfoList" resultMap="BaseAttrInfoMap">
         select bai.id,
