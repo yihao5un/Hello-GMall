@@ -44,4 +44,25 @@ public interface ManageService {
      * @return List<BaseAttrInfo>
      */
     List<BaseAttrInfo> getBaseAttrInfoList(Long category1Id, Long category2Id, Long category3Id);
+
+    /**
+     * 保存平台属性
+     * @RequestBody -> 将Json数据转换成Java对象
+     * @param baseAttrInfo baseAttrInfo
+     */
+    void saveAttrInfo(BaseAttrInfo baseAttrInfo);
+
+    /**
+     * 根据平台属性Id 获取平台属性值集合
+     * @param attrId attrId
+     * @return List<BaseAttrValue>
+     */
+    List<BaseAttrValue> getAttrValueList(Long attrId);
+
+    /**
+     * 提前判断一下属性值是否有属性
+     * @param attrId attrId
+     * @return BaseAttrInfo
+     */
+    BaseAttrInfo getBaseAttrInfo(Long attrId);
 }

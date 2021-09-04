@@ -1,15 +1,15 @@
 package com.matrix.gmall.product.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.matrix.gmall.model.product.BaseAttrInfo;
-import com.matrix.gmall.model.product.BaseCategory1;
-import com.matrix.gmall.model.product.BaseCategory2;
-import com.matrix.gmall.model.product.BaseCategory3;
+import com.matrix.gmall.model.product.*;
 import com.matrix.gmall.product.mapper.*;
 import com.matrix.gmall.product.service.ManageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -54,5 +54,59 @@ public class ManageServiceImpl implements ManageService {
     @Override
     public List<BaseAttrInfo> getBaseAttrInfoList(Long category1Id, Long category2Id, Long category3Id) {
         return baseAttrInfoMapper.selectBaseAttrInfoList(category1Id,category2Id,category3Id);
+    }
+
+    /**
+     * @Transactional
+     * 多表操作DMl语句 增加这个注解
+     * 1. 如果有异常会回滚！
+     * 2. 如果当前代码块中出现了非运行时的异常也发生回滚！
+     * 如果有问题的话 debug 的时候从controller开始
+     * @param baseAttrInfo baseAttrInfo
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void saveAttrInfo(BaseAttrInfo baseAttrInfo) {
+        // 判断什么时候修改 什么时候新增 判断baseAttrInfo的Id是否为Null
+        if (baseAttrInfo.getId() != null) {
+            // 更新
+            baseAttrInfoMapper.updateById(baseAttrInfo);
+        } else {
+            // 新增
+            baseAttrInfoMapper.insert(baseAttrInfo);
+        }
+
+        // 不知道什么时候新增 什么时候修改？
+        // 不知道什么时候 因此要先删除 再新增
+        QueryWrapper<BaseAttrValue> wrapper = new QueryWrapper<BaseAttrValue>().eq("attr_id", baseAttrInfo.getId());
+        baseAttrValueMapper.delete(wrapper);
+
+        // 关联到两张表 base_attr_info base_attr_value 插入操作DML 注意事务！！！
+        // 获取到平台属性值的集合
+        List<BaseAttrValue> attrValueList = baseAttrInfo.getAttrValueList();
+        // 将对应的Id和值插入到平台属性中去
+        if (!CollectionUtils.isEmpty(attrValueList)) {
+            attrValueList.forEach(baseAttrValue -> {
+                baseAttrValue.setAttrId(baseAttrInfo.getId());
+                baseAttrValueMapper.insert(baseAttrValue);
+            });
+        }
+    }
+
+    @Override
+    public List<BaseAttrValue> getAttrValueList(Long attrId) {
+        return baseAttrValueMapper.selectList(new QueryWrapper<BaseAttrValue>().eq("attr_id", attrId));
+    }
+
+    @Override
+    public BaseAttrInfo getBaseAttrInfo(Long attrId) {
+        BaseAttrInfo baseAttrInfo = baseAttrInfoMapper.selectById(attrId);
+        if (baseAttrInfo != null) {
+            List<BaseAttrValue> attrValueList = getAttrValueList(attrId);
+            if (!CollectionUtils.isEmpty(attrValueList)) {
+                baseAttrInfo.setAttrValueList(attrValueList);
+            }
+        }
+        return baseAttrInfo;
     }
 }
