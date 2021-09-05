@@ -14,6 +14,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("admin/product")
+//@CrossOrigin
 public class BaseManageController {
     @Autowired
     private ManageService manageService;
