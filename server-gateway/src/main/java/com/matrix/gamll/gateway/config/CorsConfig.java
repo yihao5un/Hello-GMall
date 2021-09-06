@@ -1,9 +1,8 @@
 package com.matrix.gamll.gateway.config;
 
-import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
@@ -14,7 +13,7 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
  * @Author: yihaosun
  * @Date: 2021/9/5 17:33
  */
-@CacheConfig
+@Configuration
 public class CorsConfig {
     /**
      * @Bean 相当于创建一个bean 对象交给Spring容器管理

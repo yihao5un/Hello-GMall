@@ -25,6 +25,9 @@
             ofType: 数据类型
             autoMapping： 弊端不能有重复字段！起别名！
         -->
+
+
+        <!-- 一对多的时候 这个主键Id不可以省略 -->
         <!--通过id 主键 来告诉我们谁是1 , 当前一个对象 -->
         <id column="id" property="id"></id>
 
