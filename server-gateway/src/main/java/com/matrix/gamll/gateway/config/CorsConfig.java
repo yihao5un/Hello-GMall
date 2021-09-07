@@ -7,12 +7,15 @@ import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
 
+/**
+ * CorsConfig 配置类
+ * 相当于将当前的类变成xxx.xml
+ *
+ * @author yihaosun
+ */
 @Configuration
 public class CorsConfig {
     /**
-     * CorsConfig 配置类
-     * 相当于将当前的类变成xxx.xml
-     *
      * Cors跨域配置对象
      * @Bean 相当于创建一个bean 对象交给Spring容器管理
      * <bean class = "org.springframework.web.cors.reactive.CorsWebFilter"></>

@@ -1,5 +1,7 @@
 package com.matrix.gmall.product.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.matrix.gmall.model.product.*;
 
 import java.util.List;
@@ -65,4 +67,12 @@ public interface ManageService {
      * @return BaseAttrInfo
      */
     BaseAttrInfo getBaseAttrInfo(Long attrId);
+
+    /**
+     * 根据三级分类Id 获取SpuInfo集合数据
+     * @param spuInfo spuInfo拿到三级分类的Id
+     * @param spuInfoPage 分页
+     * @return IPage<SpuInfo>
+     */
+    IPage<SpuInfo> getSpuInfoList(SpuInfo spuInfo, Page<SpuInfo> spuInfoPage);
 }

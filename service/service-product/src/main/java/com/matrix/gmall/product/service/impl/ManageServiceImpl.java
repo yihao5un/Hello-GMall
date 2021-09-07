@@ -1,6 +1,9 @@
 package com.matrix.gmall.product.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.matrix.gmall.model.product.*;
 import com.matrix.gmall.product.mapper.*;
 import com.matrix.gmall.product.service.ManageService;
@@ -35,6 +38,9 @@ public class ManageServiceImpl implements ManageService {
 
     @Autowired
     private BaseAttrValueMapper baseAttrValueMapper;
+
+    @Autowired
+    private SpuInfoMapper spuInfoMapper;
 
     @Override
     public List<BaseCategory1> getBaseCategory1() {
@@ -108,5 +114,12 @@ public class ManageServiceImpl implements ManageService {
             }
         }
         return baseAttrInfo;
+    }
+
+    @Override
+    public IPage<SpuInfo> getSpuInfoList(SpuInfo spuInfo, Page<SpuInfo> spuInfoPage) {
+        return spuInfoMapper.selectPage(spuInfoPage, new LambdaQueryWrapper<SpuInfo>()
+                .eq(SpuInfo::getCategory3Id, spuInfo.getCategory3Id())
+                .orderByDesc(SpuInfo::getId));
     }
 }
