@@ -18,7 +18,6 @@ public class BaseManageController {
     @Autowired
     private ManageService manageService;
 
-    @CrossOrigin
     @GetMapping("getCategory1")
     public Result<List<BaseCategory1>> getCategory1() {
         return Result.ok(manageService.getBaseCategory1()) ;

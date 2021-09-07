@@ -6,33 +6,33 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
-/**
- * CorsConfig 配置类
- * 想当于将当前的类变成xxx.xml
- *
- * @Author: yihaosun
- * @Date: 2021/9/5 17:33
- */
+
 @Configuration
 public class CorsConfig {
     /**
+     * CorsConfig 配置类
+     * 相当于将当前的类变成xxx.xml
+     *
+     * Cors跨域配置对象
      * @Bean 相当于创建一个bean 对象交给Spring容器管理
      * <bean class = "org.springframework.web.cors.reactive.CorsWebFilter"></>
      * @return void
      */
     @Bean
-    public CorsWebFilter corsWebFilter() {
-        CorsConfiguration corsConfiguration = new CorsConfiguration();
-        // 请求头 允许任何请求头
-        corsConfiguration.addAllowedHeader("*");
+    public CorsWebFilter corsWebFilter(){
+        CorsConfiguration configuration = new CorsConfiguration();
         // 请求域 允许任何的域名
-        corsConfiguration.addAllowedOrigin("*");
-        // 请求方法 GET POST PUT
-        corsConfiguration.addAllowedMethod("*");
+        configuration.addAllowedOrigin("*");
         // 是否允许携带Cookie信息
-        corsConfiguration.setAllowCredentials(true);
-        UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
-        urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
-        return new CorsWebFilter(urlBasedCorsConfigurationSource);
+        configuration.setAllowCredentials(true);
+        // 请求方法 GET POST PUT
+        configuration.addAllowedMethod("*");
+        // 请求头 允许任何请求头
+        configuration.addAllowedHeader("*");
+        // 配置源对象
+        UrlBasedCorsConfigurationSource configurationSource = new UrlBasedCorsConfigurationSource();
+        configurationSource.registerCorsConfiguration("/**", configuration);
+        // cors过滤器对象
+        return new CorsWebFilter(configurationSource);
     }
 }
