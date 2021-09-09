@@ -6,12 +6,8 @@ import com.matrix.gmall.common.result.Result;
 import com.matrix.gmall.model.product.SpuInfo;
 import com.matrix.gmall.product.service.ManageService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 /**
  * @Author: yihaosun
@@ -28,10 +24,10 @@ public class SpuManageController {
      * @param page 当前页
      * @param limit 当前页显示的条数
      * @param spuInfo 可以传一个POJO
-     * @return
+     * @return iPage
      */
     @GetMapping("{page}/{limit}")
-    public Result getSpuInfoList(@PathVariable Long page,
+    public Result<IPage<SpuInfo>> getSpuInfoList(@PathVariable Long page,
                                  @PathVariable Long limit,
                                  SpuInfo spuInfo
     ) {
@@ -42,4 +38,13 @@ public class SpuManageController {
         return Result.ok(iPage);
     }
 
+    @GetMapping("baseSaleAttrList")
+    public Result baseSaleAttrList() {
+        return Result.ok(manageService.getBaseSaleAttrList());
+    }
+
+    @PostMapping("saveSpuInfo")
+    public void saveSpuInfo(@RequestBody SpuInfo spuInfo) {
+        manageService.saveSpuInfo(spuInfo);
+    }
 }

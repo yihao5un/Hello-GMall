@@ -42,6 +42,18 @@ public class ManageServiceImpl implements ManageService {
     @Autowired
     private SpuInfoMapper spuInfoMapper;
 
+    @Autowired
+    private BaseSaleAttrMapper baseSaleAttrMapper;
+
+    @Autowired
+    private SpuImageMapper spuImageMapper;
+
+    @Autowired
+    private SpuSaleAttrMapper spuSaleAttrMapper;
+
+    @Autowired
+    private SpuSaleAttrValueMapper spuSaleAttrValueMapper;
+
     @Override
     public List<BaseCategory1> getBaseCategory1() {
         return baseCategory1Mapper.selectList(null);
@@ -121,5 +133,48 @@ public class ManageServiceImpl implements ManageService {
         return spuInfoMapper.selectPage(spuInfoPage, new LambdaQueryWrapper<SpuInfo>()
                 .eq(SpuInfo::getCategory3Id, spuInfo.getCategory3Id())
                 .orderByDesc(SpuInfo::getId));
+    }
+
+    @Override
+    public List<BaseSaleAttr> getBaseSaleAttrList() {
+        return baseSaleAttrMapper.selectList(null);
+    }
+
+    /**
+     * 保存的内容
+     * 1. spu_info
+     * 2. spu_image
+     * 3. spu_sale_attr
+     * 4. spu_sale_attr_value
+     * 多表的时候加上@Transactional()事务
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void saveSpuInfo(SpuInfo spuInfo) {
+        spuInfoMapper.insert(spuInfo);
+        // 获取图片
+        List<SpuImage> spuImageList = spuInfo.getSpuImageList();
+        if (!CollectionUtils.isEmpty(spuImageList)) {
+            spuImageList.forEach(spuImage -> {
+                spuImage.setSpuId(spuInfo.getId());
+                spuImageMapper.insert(spuImage);
+            });
+        }
+        // 获取当前的销售属性集合
+        List<SpuSaleAttr> spuSaleAttrList = spuInfo.getSpuSaleAttrList();
+        if (!CollectionUtils.isEmpty(spuSaleAttrList)) {
+            spuSaleAttrList.forEach(spuSaleAttr -> {
+                spuSaleAttr.setSpuId(spuInfo.getId());
+                spuSaleAttrMapper.insert(spuSaleAttr);
+                List<SpuSaleAttrValue> spuSaleAttrValueList = spuSaleAttr.getSpuSaleAttrValueList();
+                if (!CollectionUtils.isEmpty(spuSaleAttrValueList)) {
+                    spuSaleAttrValueList.forEach(spuSaleAttrValue -> {
+                        spuSaleAttrValue.setSpuId(spuInfo.getId());
+                        spuSaleAttrValue.setSaleAttrName(spuSaleAttr.getSaleAttrName());
+                        spuSaleAttrValueMapper.insert(spuSaleAttrValue);
+                    });
+                }
+            });
+        }
     }
 }

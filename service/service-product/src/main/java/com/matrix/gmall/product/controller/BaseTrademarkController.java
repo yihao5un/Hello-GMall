@@ -8,6 +8,8 @@ import com.matrix.gmall.product.service.BaseTrademarkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * 品牌管理
  * @Author: yihaosun
@@ -47,5 +49,10 @@ public class BaseTrademarkController {
     @DeleteMapping("remove/{id}")
     public Result<Boolean> remove(@PathVariable Long id) {
         return Result.ok(baseTrademarkService.removeById(id));
+    }
+
+    @GetMapping("getTrademarkList")
+    public Result<List<BaseTrademark>> getTrademarkList() {
+        return Result.ok(baseTrademarkService.list(null));
     }
 }

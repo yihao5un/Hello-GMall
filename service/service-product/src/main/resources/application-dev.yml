@@ -53,5 +53,7 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
+
+# fastDFS 分布式文件系统的 ip:port 软编码是放在配置文件中的方式 放在Java代码中的方式是硬编码
 fileServer:
-  url: http://192.168.200.128:8080/ # fastDFS 分布式文件系统的 ip:port
+  url: http://192.168.200.128:8080/
