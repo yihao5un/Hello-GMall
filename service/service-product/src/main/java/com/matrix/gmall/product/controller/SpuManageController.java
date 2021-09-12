@@ -3,10 +3,15 @@ package com.matrix.gmall.product.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.matrix.gmall.common.result.Result;
+import com.matrix.gmall.model.product.BaseSaleAttr;
+import com.matrix.gmall.model.product.SpuImage;
 import com.matrix.gmall.model.product.SpuInfo;
+import com.matrix.gmall.model.product.SpuSaleAttr;
 import com.matrix.gmall.product.service.ManageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 /**
@@ -39,12 +44,22 @@ public class SpuManageController {
     }
 
     @GetMapping("baseSaleAttrList")
-    public Result baseSaleAttrList() {
+    public Result<List<BaseSaleAttr>> baseSaleAttrList() {
         return Result.ok(manageService.getBaseSaleAttrList());
     }
 
     @PostMapping("saveSpuInfo")
     public void saveSpuInfo(@RequestBody SpuInfo spuInfo) {
         manageService.saveSpuInfo(spuInfo);
+    }
+
+    @GetMapping("spuImageList/{spuId}")
+    public Result<List<SpuImage>> getSpuImageList(@PathVariable Long spuId) {
+        return Result.ok(manageService.getSpuImageList(spuId));
+    }
+
+    @GetMapping("spuSaleAttrList/{spuId}")
+    public Result<List<SpuSaleAttr>> getSpuSaleAttrList(@PathVariable Long spuId) {
+        return Result.ok(manageService.getSpuSaleAttrList(spuId));
     }
 }

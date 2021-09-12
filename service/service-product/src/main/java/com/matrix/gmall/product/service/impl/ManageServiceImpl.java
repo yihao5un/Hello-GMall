@@ -11,8 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -53,6 +54,18 @@ public class ManageServiceImpl implements ManageService {
 
     @Autowired
     private SpuSaleAttrValueMapper spuSaleAttrValueMapper;
+
+    @Autowired
+    private SkuInfoMapper skuInfoMapper;
+
+    @Autowired
+    private SkuImageMapper skuImageMapper;
+
+    @Autowired
+    private SkuSaleAttrValueMapper skuSaleAttrValueMapper;
+
+    @Autowired
+    private SkuAttrValueMapper skuAttrValueMapper;
 
     @Override
     public List<BaseCategory1> getBaseCategory1() {
@@ -173,6 +186,54 @@ public class ManageServiceImpl implements ManageService {
                         spuSaleAttrValue.setSaleAttrName(spuSaleAttr.getSaleAttrName());
                         spuSaleAttrValueMapper.insert(spuSaleAttrValue);
                     });
+                }
+            });
+        }
+    }
+
+    @Override
+    public List<SpuImage> getSpuImageList(Long spuId) {
+        return spuImageMapper.selectList(new LambdaQueryWrapper<SpuImage>().eq(SpuImage::getSpuId, spuId));
+    }
+
+    @Override
+    public List<SpuSaleAttr> getSpuSaleAttrList(Long spuId) {
+        return spuSaleAttrMapper.selectSpuSaleAttrList(spuId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void saveSkuInfo(SkuInfo skuInfo) {
+        // 考虑都需要保存到那几张表里面去 sku_info sku_attr_value sku_sale_attr_vale sku_image
+        skuInfoMapper.insert(skuInfo);
+        List<SkuAttrValue> skuAttrValueList = skuInfo.getSkuAttrValueList();
+        if (!CollectionUtils.isEmpty(skuAttrValueList)) {
+            skuAttrValueList.forEach(skuAttrValue -> {
+                // 看看前端都少传了什么 然后在其他的方法把实体类补充完整
+                if (skuInfo.getId() != null) {
+                    skuAttrValue.setSkuId(skuInfo.getId());
+                    skuAttrValueMapper.insert(skuAttrValue);
+                }
+            });
+        }
+
+        List<SkuSaleAttrValue> skuSaleAttrValueList = skuInfo.getSkuSaleAttrValueList();
+        if (!CollectionUtils.isEmpty(skuSaleAttrValueList)) {
+            skuSaleAttrValueList.forEach(skuSaleAttrValue -> {
+                if (!ObjectUtils.isEmpty(skuInfo.getSpuId()) && !ObjectUtils.isEmpty(skuInfo.getId())) {
+                    skuSaleAttrValue.setSpuId(skuInfo.getSpuId());
+                    skuSaleAttrValue.setSkuId(skuInfo.getId());
+                    skuSaleAttrValueMapper.insert(skuSaleAttrValue);
+                }
+            });
+        }
+
+        List<SkuImage> skuImageList = skuInfo.getSkuImageList();
+        if (!CollectionUtils.isEmpty(skuImageList)) {
+            skuImageList.forEach(skuImage -> {
+                if (!ObjectUtils.isEmpty(skuInfo.getId())) {
+                    skuImage.setSkuId(skuInfo.getId());
+                    skuImageMapper.insert(skuImage);
                 }
             });
         }

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper SYSTEM "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.matrix.gmall.product.mapper.SpuSaleAttrMapper">
+
+    <!-- 返回结果集的映射 -->
+    <resultMap id="SpuSaleAttrMap" type="com.matrix.gmall.model.product.SpuSaleAttr" autoMapping="true">
+        <id property="id" column="id"></id>
+        <!-- 配置1:n的关系 -->
+        <collection property="spuSaleAttrValueList" ofType="com.matrix.gmall.model.product.SpuSaleAttrValue" autoMapping="true">
+            <id property="id" column="sale_attr_value_id"></id>
+        </collection>
+    </resultMap>
+
+    <!-- MySQL 中有个SQL片段的标签 然后在SQL语句中添加<include refid ="" 标签> 引入这个片段 -->
+    <sql id="spuSaleAttrSql">
+        <!--@sql SELECT -->
+        ssa.id,
+        ssa.spu_id,
+        ssa.base_sale_attr_id,
+        ssa.sale_attr_name,
+        ssav.id AS sale_attr_value_id,
+        ssav.sale_attr_value_name
+        <!--@sql FROM gmall_product.spu_sale_attr ssa INNER JOIN gmall_product.spu_sale_attr_value ssav -->
+    </sql>
+
+    <select id="selectSpuSaleAttrList" resultMap="SpuSaleAttrMap">
+        SELECT
+        <!-- 引入SQL片段 简化了并管理返回的很多字段 -->
+        <include refid="spuSaleAttrSql"/>
+<!--        ssa.id,-->
+<!--        ssa.spu_id,-->
+<!--        ssa.base_sale_attr_id,-->
+<!--        ssa.sale_attr_name,-->
+<!--        ssav.id AS sale_attr_value_id,-->
+<!--        ssav.sale_attr_value_name-->
+        FROM gmall_product.spu_sale_attr ssa INNER JOIN gmall_product.spu_sale_attr_value ssav
+        ON ssa.spu_id = ssav.spu_id AND ssa.base_sale_attr_id = ssav.base_sale_attr_id
+        WHERE ssa.spu_id = #{spuId}
+    </select>
+
+</mapper>
