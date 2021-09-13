@@ -3,9 +3,8 @@ server:
 
 mybatis-plus:
   configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-  mapper-locations: classpath:mapper/*Mapper.xml
-  # classpath 代表Resource这个目录 编写复杂的sql 语句 ，mybatis-plus 对多表关联支持性差。手写xml文件{sql语句}
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # MyBatis-Plus 配置打印的SQL路径
+  mapper-locations: classpath:mapper/*Mapper.xml # classpath 代表Resource这个目录 编写复杂的sql 语句 ，mybatis-plus 对多表关联支持性差。手写xml文件{sql语句}
 
 spring:
   zipkin:

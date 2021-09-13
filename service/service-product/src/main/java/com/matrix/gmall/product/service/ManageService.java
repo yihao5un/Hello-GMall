@@ -124,4 +124,23 @@ public interface ManageService {
      * @param skuInfo skuInfo
      */
     void saveSkuInfo(SkuInfo skuInfo);
+
+    /**
+     * 查询SkuInfo 带分页
+     * @param skuInfoPage skuInfoPage
+     * @return IPage<SkuInfo>
+     */
+    IPage<SkuInfo> getSkuInfoList(Page<SkuInfo> skuInfoPage);
+
+    /**
+     * 根据skuId上架
+     * @param skuId skuId
+     */
+    void onSale(Long skuId);
+
+    /**
+     * 根据skuId下架
+     * @param skuId skuId
+     */
+    void cancelSale(Long skuId);
 }

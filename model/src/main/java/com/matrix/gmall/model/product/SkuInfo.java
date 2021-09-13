@@ -21,7 +21,6 @@ import java.util.List;
 @TableName("sku_info")
 public class SkuInfo extends BaseEntity {
 
-
 //    public SkuInfo(){}
 //	public SkuInfo(Long skuId){
 //		setId(skuId);

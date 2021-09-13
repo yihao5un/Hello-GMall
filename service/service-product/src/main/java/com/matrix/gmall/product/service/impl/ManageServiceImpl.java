@@ -238,4 +238,30 @@ public class ManageServiceImpl implements ManageService {
             });
         }
     }
+
+    @Override
+    public IPage<SkuInfo> getSkuInfoList(Page<SkuInfo> skuInfoPage) {
+        // limit 0, 10 表示从第一个开始到第十个位置的分页数据
+        // limit 10, 10 表示从第一给开始到第二十个位置的分页数据
+        // 前面的数据表示开始位置 后面的数据表示的是偏移量
+        return skuInfoMapper.selectPage(skuInfoPage, new LambdaQueryWrapper<SkuInfo>().orderByDesc(SkuInfo::getId));
+    }
+
+    @Override
+    public void onSale(Long skuId) {
+        // 更新状态
+        SkuInfo skuInfo = new SkuInfo();
+        skuInfo.setId(skuId);
+        skuInfo.setIsSale(1);
+        skuInfoMapper.updateById(skuInfo);
+    }
+
+    @Override
+    public void cancelSale(Long skuId) {
+        // 更新状态
+        SkuInfo skuInfo = new SkuInfo();
+        skuInfo.setId(skuId);
+        skuInfo.setIsSale(0);
+        skuInfoMapper.updateById(skuInfo);
+    }
 }
