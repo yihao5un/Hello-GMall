@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>test --- Thymeleaf</title>
+</head>
+<body>
+    <h1>Thymeleaf...</h1>
+    <!-- 获取后台的数据 -->
+    <div th:text = "'拼接' + ${msg}" th:value = "${msg}"></div>
+    <!-- th: text 表示渲染文本 ${}表示获取这个key所对应的数据 -->
+    <!-- th: value 表示给标签进行赋值 -->
+
+    <!-- 开启热部署 只修改前端的页面 不需要重新启动服务器 -->
+    <!-- spring.thymeleaf.cache=false -->
+    <h1>开启热部署</h1>
+    <div th:text = "'拼接 ->  ' + ${msg}" th:value = "${msg}"></div>
+
+</body>
+</html>
