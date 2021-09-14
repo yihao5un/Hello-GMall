@@ -16,5 +16,33 @@
     <h1>开启热部署</h1>
     <div th:text = "'拼接 ->  ' + ${msg}" th:value = "${msg}"></div>
 
+    <h2>循环遍历</h2>
+    <table>
+        <tr th:each="name, stat: ${slist}">
+            <!-- td 是列 -->
+            <td th:text="${name}"></td>
+            <td th:text="${stat.index}"></td>
+            <td th:text="${stat.count}"></td>
+            <td th:text="${stat.size}"></td>
+            <td th:text="${stat.odd}"></td>
+            <td th:text="${stat.even}"></td>
+            <td th:text="${stat.first}"></td>
+            <td th:text="${stat.last}"></td>
+        </tr>
+    </table>
+
+    <h2>session 取值 - 案例1</h2>
+    <div th:text="${sname}"></div>
+
+    <h2>session 取值 - 案例2</h2>
+    <!-- 必须在前面加上session. -->
+    <div th:text="${session.sname}"></div>
+
+    <h2>内嵌页</h2>
+    <div th:include="inner"></div>
+
+    <!-- utext 能够解析文本 用于高亮显示文本的场景  -->
+
+
 </body>
 </html>
