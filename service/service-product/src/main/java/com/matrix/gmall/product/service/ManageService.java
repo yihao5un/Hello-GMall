@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.matrix.gmall.model.product.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -143,4 +144,18 @@ public interface ManageService {
      * @param skuId skuId
      */
     void cancelSale(Long skuId);
+
+    /**
+     * 根据SkuId 查询 SkuInfo 以及 SkuImageList
+     * @param skuId skuId
+     * @return SkuInfo
+     */
+    SkuInfo getSkuInfo(Long skuId);
+
+    /**
+     * 根据三级分类Id 查询 分类属性名称
+     * @param category3Id 注意这个category3Id 就是上面那个方法的 SkuInfo.id
+     * @return BaseCategoryView
+     */
+    BaseCategoryView getCategoryViewByCategory3Id(Long category3Id);
 }
