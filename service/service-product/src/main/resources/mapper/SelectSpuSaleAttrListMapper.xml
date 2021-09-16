@@ -4,10 +4,10 @@
 
     <!-- 返回结果集的映射 -->
     <resultMap id="SpuSaleAttrMap" type="com.matrix.gmall.model.product.SpuSaleAttr" autoMapping="true">
-        <id property="id" column="id"></id>
+        <id property="id" column="id"/>
         <!-- 配置1:n的关系 -->
         <collection property="spuSaleAttrValueList" ofType="com.matrix.gmall.model.product.SpuSaleAttrValue" autoMapping="true">
-            <id property="id" column="sale_attr_value_id"></id>
+            <id property="id" column="sale_attr_value_id"/>
         </collection>
     </resultMap>
 
@@ -38,4 +38,20 @@
         WHERE ssa.spu_id = #{spuId}
     </select>
 
+    <select id="selectSpuSaleAttListCheckBySku" resultMap="SpuSaleAttrMap">
+        SELECT ssa.id,
+               ssa.spu_id,
+               ssa.base_sale_attr_id,
+               ssa.sale_attr_name,
+               ssav.id                        AS sale_attr_value_id,
+               ssav.sale_attr_value_name,
+               ssav2.sku_id,
+               IF(ssav2.sku_id IS NULL, 0, 1) AS is_checked
+        FROM gmall_product.spu_sale_attr ssa
+                     INNER JOIN gmall_product.spu_sale_attr_value ssav
+                ON ssa.spu_id = ssav.spu_id AND ssa.base_sale_attr_id = ssav.base_sale_attr_id
+                     LEFT JOIN gmall_product.sku_sale_attr_value ssav2
+                ON ssav2.sale_attr_value_id = ssav.id AND ssav2.sku_id = #{skuId}
+        WHERE ssa.spu_id = #{spuId}
+    </select>
 </mapper>

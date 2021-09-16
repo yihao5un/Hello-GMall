@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -280,5 +281,19 @@ public class ManageServiceImpl implements ManageService {
     public BaseCategoryView getCategoryViewByCategory3Id(Long category3Id) {
         // SELECT * FROM base_category_view WHERE id = 61
         return baseCategoryViewMapper.selectById(category3Id);
+    }
+
+    @Override
+    public BigDecimal getSkuPrice(Long skuId) {
+        SkuInfo skuInfo = skuInfoMapper.selectById(skuId);
+        if (!ObjectUtils.isEmpty(skuInfo)) {
+            return skuInfo.getPrice();
+        }
+        return new BigDecimal(0);
+    }
+
+    @Override
+    public List<SpuSaleAttr> getSpuSaleAttListCheckBySku(Long skuId, Long spuId) {
+        return spuSaleAttrMapper.selectSpuSaleAttListCheckBySku(skuId, spuId);
     }
 }

@@ -158,4 +158,19 @@ public interface ManageService {
      * @return BaseCategoryView
      */
     BaseCategoryView getCategoryViewByCategory3Id(Long category3Id);
+
+    /**
+     * 根据SkuId查询商品价格
+     * @param skuId skuId
+     * @return BigDecimal
+     */
+    BigDecimal getSkuPrice(Long skuId);
+
+    /**
+     * 根据SkuId 和 SpuId 查询销售属性和销售属性值
+     * @param skuId skuId
+     * @param spuId spuId
+     * @return List<SpuSaleAttr>
+     */
+    List<SpuSaleAttr> getSpuSaleAttListCheckBySku(Long skuId, Long spuId);
 }
