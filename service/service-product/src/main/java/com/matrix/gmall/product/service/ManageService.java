@@ -6,6 +6,7 @@ import com.matrix.gmall.model.product.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 3.1	先加载所有的一级分类数据！
@@ -173,4 +174,17 @@ public interface ManageService {
      * @return List<SpuSaleAttr>
      */
     List<SpuSaleAttr> getSpuSaleAttListCheckBySku(Long skuId, Long spuId);
+
+    /**
+     * 根据spuId获取销售属性值Id和skuId的组合数据
+     *
+     * ！！！注意
+     * 返回值可以自定义一个实体类{skuId, valueIds} 在字段比较少的时候还可以使用Map数据结构接收Map(key, value);
+     * map.put("skuId", "1")
+     * map.put("valueIds", "1|2")
+     *
+     * @param spuId spuId
+     * @return Map<String, String>
+     */
+    Map<String, Long> getSkuIdValueIdsMap(Long spuId);
 }

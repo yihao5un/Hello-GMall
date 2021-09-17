@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 封装数据提供其他微服务使用
@@ -49,5 +50,10 @@ public class ProductApiController {
                                                           @PathVariable Long spuId) {
         // 注意: 如果有多个参数的话 一定要按照参数的顺序传 不可以随意换位置 否则会传错
         return manageService.getSpuSaleAttListCheckBySku(skuId, spuId);
+    }
+
+    @GetMapping("inner/getSkuValueIdsMap/{spuId}")
+    public Map<String, Long> getSkuValueIdsMap(@PathVariable Long spuId) {
+        return manageService.getSkuIdValueIdsMap(spuId);
     }
 }

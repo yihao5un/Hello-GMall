@@ -14,7 +14,9 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Author: yihaosun
@@ -295,5 +297,17 @@ public class ManageServiceImpl implements ManageService {
     @Override
     public List<SpuSaleAttr> getSpuSaleAttListCheckBySku(Long skuId, Long spuId) {
         return spuSaleAttrMapper.selectSpuSaleAttListCheckBySku(skuId, spuId);
+    }
+
+    @Override
+    public Map<String, Long> getSkuIdValueIdsMap(Long spuId) {
+        Map hashMap = new HashMap<>();
+        // 调用哪个mapper看调用了哪张表 调用了哪张表看想要的返回的数据是从哪张表里面来的
+        List<Map> mapList = skuSaleAttrValueMapper.selectSaleAttrValuesBySpu(spuId);
+        if (!CollectionUtils.isEmpty(mapList)) {
+            // 根据销售属性Ids 拿到 skuId
+            mapList.forEach(map -> hashMap.put(map.get("value_ids"), map.get("sku_id")));
+        }
+        return hashMap;
     }
 }
