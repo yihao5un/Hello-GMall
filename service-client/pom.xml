@@ -11,6 +11,7 @@
     <description>远程调用父工程</description>
     <modules>
         <module>service-product-client</module>
+        <module>service-item-client</module>
     </modules>
     <!-- packaging 为 pom 表示父工程-->
     <packaging>pom</packaging>

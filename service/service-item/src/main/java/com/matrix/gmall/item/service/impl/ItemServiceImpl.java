@@ -7,6 +7,7 @@ import com.matrix.gmall.model.product.SkuInfo;
 import com.matrix.gmall.model.product.SpuSaleAttr;
 import com.matrix.gmall.product.client.ProductFeignClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;

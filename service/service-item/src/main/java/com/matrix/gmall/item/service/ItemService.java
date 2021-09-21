@@ -8,5 +8,10 @@ import java.util.Map;
  */
 public interface ItemService {
 
+    /**
+     * Feign 调用 service-product 数据
+     * @param skuId skuId
+     * @return Map<String, Object>
+     */
     Map<String, Object> getItemBySkuId(Long skuId);
 }
