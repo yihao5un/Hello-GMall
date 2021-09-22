@@ -12,6 +12,6 @@ import org.springframework.stereotype.Component;
 public class ItemDegradeFeignClient implements ItemFeignClient {
     @Override
     public Result getItemById(Long skuId) {
-        return null;
+        return Result.fail();
     }
 }

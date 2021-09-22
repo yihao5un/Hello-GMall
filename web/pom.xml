@@ -12,8 +12,42 @@
     <!--    2.war工程：将会打包成war，发布在服务器上的工程。如网站或服务。-->
     <!--    3.jar工程：将会打包成jar用作jar包使用。-->
     <packaging>pom</packaging>
+    <modules>
+        <module>web-all</module>
+    </modules>
 
     <artifactId>web</artifactId>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.matrix.gmall</groupId>
+            <artifactId>web-util</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        <!-- 服务注册 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
+        <!-- 服务调用feign -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+        <!-- 流量控制 -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+        </dependency>
+    </dependencies>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>

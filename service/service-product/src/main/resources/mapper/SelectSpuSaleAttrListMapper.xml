@@ -53,5 +53,6 @@
                      LEFT JOIN gmall_product.sku_sale_attr_value ssav2
                 ON ssav2.sale_attr_value_id = ssav.id AND ssav2.sku_id = #{skuId}
         WHERE ssa.spu_id = #{spuId}
+        ORDER BY ssav.base_sale_attr_id, ssav.id
     </select>
 </mapper>

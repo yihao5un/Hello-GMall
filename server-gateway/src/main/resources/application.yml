@@ -33,7 +33,7 @@ spring:
         - id: service-cart
           uri: lb://service-cart
           predicates:
-            - Path=/*/cart/**
+            - Path=/*/ca rt/**
         - id: service-order
           uri: lb://service-order
           predicates:
@@ -50,6 +50,7 @@ spring:
         - id: web-item
           uri: lb://web-all
           predicates:
+            # 用户输入item.gmall.com 之后 会映射到 web-all 这个路径  然后走控制器 htt://item.gmall.com/{skuId}.html
             - Host=item.gmall.com
         #==================首页前端==========================
         - id: web-index
