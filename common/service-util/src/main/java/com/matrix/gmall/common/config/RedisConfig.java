@@ -23,6 +23,7 @@ import java.time.Duration;
 /**
  * Redis配置类
  *
+ * @author yihaosun
  */
 @Configuration
 @EnableCaching
@@ -63,7 +64,8 @@ public class RedisConfig {
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
         objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
         jackson2JsonRedisSerializer.setObjectMapper(objectMapper);
-        //  将Redis 中 string ，hash 数据类型，自动序列化！ set(key,value)  set name zhangsan  set s1 存储一个对象user.toString();
+        // 将Redis 中 string ，hash 数据类型，自动序列化！ set(key,value)  set name zhangsan  set s1 存储一个对象user.toString();
+        // 序列化就是将对象变成字符串的过程
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(jackson2JsonRedisSerializer);
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
