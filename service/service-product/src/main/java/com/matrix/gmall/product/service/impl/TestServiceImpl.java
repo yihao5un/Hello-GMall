@@ -33,6 +33,7 @@ public class TestServiceImpl implements TestService {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
+    /** 本地锁
     @Override
     public synchronized void testLock() {
         // 操作字符串是opsForValue() 获取当前num的值
@@ -42,5 +43,37 @@ public class TestServiceImpl implements TestService {
         }
         int numValue = Integer.parseInt(num);
         stringRedisTemplate.opsForValue().set("num", String.valueOf(++numValue));
+    }
+    */
+
+    // 分布式锁 就不需要synchronized了
+    @Override
+    public void testLock() {
+        // 使用setnx命令 判断是否获取到了锁
+        Boolean flag = stringRedisTemplate.opsForValue().setIfAbsent("lock", "ok");
+        // 如果获取到了锁
+        if (flag) {
+            // 执行业务逻辑
+            // 操作字符串是opsForValue() 获取当前num的值
+            String num = stringRedisTemplate.opsForValue().get("num");
+            if (StringUtils.isEmpty(num)) {
+                return;
+            }
+            int numValue = Integer.parseInt(num);
+            stringRedisTemplate.opsForValue().set("num", String.valueOf(++numValue));
+
+            // 最后要将这个锁给他释放掉 del key
+            stringRedisTemplate.delete("lock");
+        }else {
+            // 没有获取到锁 等着业务完成
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            // 等完之后 再看看业务逻辑跑完了没有
+            // 自旋
+            testLock();
+        }
     }
 }

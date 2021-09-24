@@ -25,6 +25,7 @@ public class ItemController {
     @RequestMapping("{skuId}.html")
     public String skuItem(@PathVariable Long skuId, Model model) {
         Result<Map> result = itemFeignClient.getItemById(skuId);
+        // 将商品详情中的所有Map都一次性全部存上
         model.addAllAttributes(result.getData());
         // 返回item目录下的视图名称
         return "item/index";
