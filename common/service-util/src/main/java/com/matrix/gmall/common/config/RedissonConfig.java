@@ -15,7 +15,7 @@ import org.springframework.util.StringUtils;
  */
 @Data
 @Configuration
-@ConfigurationProperties("spring.redis")
+@ConfigurationProperties("spring.redis") // 读取配置文件以spring.redis开头的 相当于每个的@Value()的操作
 public class RedissonConfig {
 
     private String host;
@@ -33,8 +33,10 @@ public class RedissonConfig {
     private static String ADDRESS_PREFIX = "redis://";
 
     /**
-     * 自动装配
+     * 将当前的RedisClient注入到Spring容器中
+     * 如果其他地方也需要的话 那么直接@Autowired就可以了
      *
+     * 自动装配
      */
     @Bean
     RedissonClient redissonSingle() {
@@ -44,7 +46,7 @@ public class RedissonConfig {
         if(StringUtils.isEmpty(host)){
             throw new RuntimeException("host is  empty");
         }
-        //  配置服务
+        //  配置服务 单节点 配置集群是config.useClusterServers() 上线之后再用集群
         SingleServerConfig serverConfig = config.useSingleServer()
                 // redis://127.0.0.1:7181
                 .setAddress(ADDRESS_PREFIX + this.host + ":" + port)
