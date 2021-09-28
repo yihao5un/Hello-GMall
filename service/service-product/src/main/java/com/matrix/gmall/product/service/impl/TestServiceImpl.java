@@ -1,7 +1,9 @@
 package com.matrix.gmall.product.service.impl;
 
 import com.matrix.gmall.product.service.TestService;
+import org.redisson.api.RFuture;
 import org.redisson.api.RLock;
+import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -119,7 +121,7 @@ public class TestServiceImpl implements TestService {
      * 2. lock.lock() lock.unlock() 这种是最常见的方式
      */
     @Override
-    public void testLock() {
+    public void testLock() throws InterruptedException {
         // 创建锁：
         // String skuId="25";
         // String locKey ="lock:"+skuId;
@@ -129,19 +131,56 @@ public class TestServiceImpl implements TestService {
         // 开始加锁
         // lock.lock();
         // 给锁设置一个过期时间 超过10s之后会自动解锁
-        // TODO 这个时间的格式 如果设置为10的话 就会少一个
-        lock.lock(10, TimeUnit.SECONDS);
-        // 业务逻辑代码
-        // 获取数据
-        String num = stringRedisTemplate.opsForValue().get("num");
-        if (StringUtils.isEmpty(num)) {
-            return;
+        // TODO 这个时间的格式 如果设置为10的话 就会少一个 包括下面的方法二也会出现莫名其妙的错误 原因是版本号需要升级了
+//        lock.lock(10, TimeUnit.SECONDS);
+
+        // 方法二:
+        boolean res = lock.tryLock(100, 10, TimeUnit.SECONDS);
+
+        // 方法三: 使用异步的方法 目前可能不太好用
+//        lock.lockAsync();
+        if (res) {
+            try {
+                // 上锁成功
+                // 业务逻辑代码
+                // 获取数据
+                String num = stringRedisTemplate.opsForValue().get("num");
+                if (StringUtils.isEmpty(num)) {
+                    return;
+                }
+                // 将value 变为int
+                int numValue = Integer.parseInt(num);
+                // 将num +1 放入缓存
+                stringRedisTemplate.opsForValue().set("num", String.valueOf(++numValue));
+            } finally {
+                // 解锁：
+                lock.unlock();
+            }
         }
-        // 将value 变为int
-        int numValue = Integer.parseInt(num);
-        // 将num +1 放入缓存
-        stringRedisTemplate.opsForValue().set("num", String.valueOf(++numValue));
-        // 解锁：
-        lock.unlock();
+//        lock.unlockAsync();
+    }
+
+    @Override
+    public String readLock() {
+        // 创建读写锁对象
+        RReadWriteLock readWriteLock = redissonClient.getReadWriteLock("anyRWLock");
+        // 上锁 10s 之后自动解锁
+        readWriteLock.readLock().lock(10, TimeUnit.SECONDS);
+        // 从缓存中读取数据
+        String msg = stringRedisTemplate.opsForValue().get("msg");
+        // 返回读到的数据
+        return msg;
+    }
+
+    @Override
+    public String writeLock() {
+        // 创建读写锁对象
+        RReadWriteLock readWriteLock = redissonClient.getReadWriteLock("anyRWLock");
+        // 上锁 10s 之后自动解锁
+        readWriteLock.writeLock().lock(10, TimeUnit.SECONDS);
+        String uuid = UUID.randomUUID().toString();
+        // 将内容写入缓存
+        stringRedisTemplate.opsForValue().set("msg", uuid);
+        return "写入完成: " + uuid;
     }
 }

@@ -1,5 +1,6 @@
 package com.matrix.gmall.product.controller;
 
+import com.matrix.gmall.common.result.Result;
 import com.matrix.gmall.product.service.TestService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,19 @@ public class TestController {
     private TestService testService;
 
     @GetMapping("testLock")
-    public void testLock() {
+    public void testLock() throws InterruptedException {
         testService.testLock();
+    }
+
+    @GetMapping("read")
+    public Result<String> read() {
+        String msg = testService.readLock();
+        return Result.ok(msg);
+    }
+
+    @GetMapping("write")
+    public Result<String> write() {
+        String msg = testService.writeLock();
+        return Result.ok(msg);
     }
 }

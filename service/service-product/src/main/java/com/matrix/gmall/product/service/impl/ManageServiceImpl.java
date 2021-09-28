@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.matrix.gmall.common.constant.RedisConst;
 import com.matrix.gmall.model.product.*;
 import com.matrix.gmall.product.mapper.*;
 import com.matrix.gmall.product.service.ManageService;
@@ -84,26 +85,25 @@ public class ManageServiceImpl implements ManageService {
 
     @Override
     public List<BaseCategory2> getBaseCategory2(Long category1Id) {
-        return baseCategory2Mapper.selectList(new QueryWrapper<BaseCategory2>().eq("category1_id",category1Id));
+        return baseCategory2Mapper.selectList(new QueryWrapper<BaseCategory2>().eq("category1_id", category1Id));
     }
 
     @Override
     public List<BaseCategory3> getBaseCategory3(Long category2Id) {
-        return baseCategory3Mapper.selectList(new QueryWrapper<BaseCategory3>().eq("category2_id",category2Id));
+        return baseCategory3Mapper.selectList(new QueryWrapper<BaseCategory3>().eq("category2_id", category2Id));
     }
 
     @Override
     public List<BaseAttrInfo> getBaseAttrInfoList(Long category1Id, Long category2Id, Long category3Id) {
-        return baseAttrInfoMapper.selectBaseAttrInfoList(category1Id,category2Id,category3Id);
+        return baseAttrInfoMapper.selectBaseAttrInfoList(category1Id, category2Id, category3Id);
     }
 
     /**
-     * @Transactional
-     * 多表操作DMl语句 增加这个注解
+     * @param baseAttrInfo baseAttrInfo
+     * @Transactional 多表操作DMl语句 增加这个注解
      * 1. 如果有异常会回滚！
      * 2. 如果当前代码块中出现了非运行时的异常也发生回滚！
      * 如果有问题的话 debug 的时候从controller开始
-     * @param baseAttrInfo baseAttrInfo
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -275,10 +275,61 @@ public class ManageServiceImpl implements ManageService {
         skuInfoMapper.updateById(skuInfo);
     }
 
+    /**
+     * 做分布式锁的目的是为了防止缓存击穿等单机锁的局限性
+     * 所有锁的业务逻辑
+     * if (true) {
+     * // 读缓存
+     * } else {
+     * // 走数据库 并给缓存
+     * }
+     *
+     * @param skuId skuId
+     * @return SkuInfo
+     */
+
+    /**
+     * ！！！读取缓存的数据 如何获取数据
+     * String: 存储字符串 常量的
+     * list: 存储队列 有先有后的
+     * set: 存储没有重复的数据
+     * Hash: 存储Java对象
+     * zset: 存储没有重复的 而且可以做排序
+     * 根据数据的存储特征选择相应的opsForxxx
+     * <p>
+     * redisTemplate.opsForHash(); 能 hset(key, field, value) field = 实体类的属性名！(但是太多了)
+     * 优点是便于修改！hget(field, value);
+     * 而我们做查询商品详情不需要进行修改操作
+     * <p>
+     * 综上, 我们为了方便直接存储字符串即可 不需要Hash
+     */
     @Override
     public SkuInfo getSkuInfo(Long skuId) {
+        SkuInfo skuInfo = new SkuInfo();
+        String skuKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKUKEY_SUFFIX;
+        // 正常返回Json字符串 但是我们在RedisConfig中将String Hash已经做了序列化处理了 所以可以直接返回
+        skuInfo = (SkuInfo) redisTemplate.opsForValue().get(skuKey);
+
+        //  做了序列化处理 所以我们直接set就好了
+        // redisTemplate.opsForValue().set(skukey, skuId);
+
+        // TODO
+        if (true) {
+            // 读缓存
+        } else {
+            // 走数据库 并给缓存
+            getInfoDB(skuId);
+        }
+        // TODO
+        return skuInfo;
+    }
+
+    // 根据SkuId查询数据库DB
+    private SkuInfo getInfoDB(Long skuId) {
+        // 以下相当于走数据库
         SkuInfo skuInfo = skuInfoMapper.selectById(skuId);
-        List<SkuImage> skuImages = skuImageMapper.selectList(new LambdaQueryWrapper<SkuImage>().eq(SkuImage::getSkuId, skuId));
+        List<SkuImage> skuImages = skuImageMapper.selectList(new LambdaQueryWrapper<SkuImage>()
+                .eq(SkuImage::getSkuId, skuId));
         // 将SkuImageList集合赋值给SkuInfo对象
         skuInfo.setSkuImageList(skuImages);
         return skuInfo;
