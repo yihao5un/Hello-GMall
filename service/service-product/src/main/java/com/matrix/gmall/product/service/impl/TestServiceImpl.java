@@ -20,14 +20,34 @@ import java.util.concurrent.TimeUnit;
  * 2. 利用stringRedisTemplate 获取到的当前num值
  * 3. 如果num不为空则需要对当前的num进行加一操作 之后在写回去
  * 4. 如果num为空的话 直接返回即可
+ *
  * <p>
  * 本地锁
+ *
+ *  加锁
+ *      set nx
+ *      set ex
+ *      set key value ex/px TimeOut nx/xx
+ *  删除
+ *      要保证原子性 -> Lua脚本
+ * PS: Zookeeper(强调安全)也可以做分布式锁 但是性能较低 但是安全和可靠性不如redis(强调性能)
+ *
  * 测试本地锁；ab -n 5000 -c 100 192.168.200.120:8206/admin/product/test/testLock
  * 属于这个ip下的这个服务端口和地址 在本地加上所之后 上synchronized可以锁住 -> 结果正确
- * 如果运行多个微服务的时候本地锁就出现了局限性
+ * 用Redis做分布式锁的时候如果运行多个微服务(集群环境)的时候本地锁就出现了局限性 所以引出了Redisson做分布式锁(底层做了封装)
  * <p>
+ *
+ *
  * 分布式锁
- * 先启动网关 然后访问service-product 让网关去负载均衡 代理 选择实例
+ * 推荐使用
+ * 基于Redis和Java实现的锁
+ * 使用步骤
+ * 1. 倒入依赖
+ * 2. 定义配置文件
+ * 3. 使用
+ *      可重入锁: 有锁的话等一会 之后再执行原来被锁住这块逻辑
+ *
+ * 先启动网关 然后访问 service-product 让网关去负载均衡 代理 选择实例
  * 经过ab测试后发现 在分布式项目中 本地锁根本就锁不住 会报超时的错误 然后这个num也不对了
  *
  * @Author: yihaosun
@@ -46,7 +66,6 @@ public class TestServiceImpl implements TestService {
 
     /**
      * 本地锁
-     *
      * @Override public synchronized void testLock() {
      * // 操作字符串是opsForValue() 获取当前num的值
      * String num = stringRedisTemplate.opsForValue().get("num");

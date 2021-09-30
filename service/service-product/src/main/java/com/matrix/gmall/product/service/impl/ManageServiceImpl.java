@@ -8,17 +8,19 @@ import com.matrix.gmall.common.constant.RedisConst;
 import com.matrix.gmall.model.product.*;
 import com.matrix.gmall.product.mapper.*;
 import com.matrix.gmall.product.service.ManageService;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Author: yihaosun
@@ -76,6 +78,9 @@ public class ManageServiceImpl implements ManageService {
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private RedissonClient redissonClient;
 
 
     @Override
@@ -304,34 +309,139 @@ public class ManageServiceImpl implements ManageService {
      * 综上, 我们为了方便直接存储字符串即可 不需要Hash
      */
     @Override
-    public SkuInfo getSkuInfo(Long skuId) {
-        SkuInfo skuInfo = new SkuInfo();
-        String skuKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKUKEY_SUFFIX;
-        // 正常返回Json字符串 但是我们在RedisConfig中将String Hash已经做了序列化处理了 所以可以直接返回
-        skuInfo = (SkuInfo) redisTemplate.opsForValue().get(skuKey);
+    public SkuInfo getSkuInfo(Long skuId) throws InterruptedException {
+        return getSkuInfoRedisson(skuId);
+    }
 
-        //  做了序列化处理 所以我们直接set就好了
-        // redisTemplate.opsForValue().set(skukey, skuId);
-
-        // TODO
-        if (true) {
-            // 读缓存
-        } else {
-            // 走数据库 并给缓存
-            getInfoDB(skuId);
+    /**
+     * 使用 Redisson 做分布式锁
+     * @param skuId skuId
+     * @return SkuInfo
+     */
+    private SkuInfo getSkuInfoRedisson(Long skuId) {
+        try {
+            // 使用Redisson 做 分布式锁
+            // 声明对象
+            SkuInfo skuInfo = new SkuInfo();
+            String skuKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKUKEY_SUFFIX;
+            skuInfo = (SkuInfo) redisTemplate.opsForValue().get(skuKey);
+            if (Objects.isNull(skuInfo)) {
+                // 定义锁的Key
+                String skuLockKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKULOCK_SUFFIX;
+                RLock lock = redissonClient.getLock(skuLockKey);
+                // 上锁 -> 使用Redisson
+                boolean flag = lock.tryLock(RedisConst.SKULOCK_EXPIRE_PX1, RedisConst.SKULOCK_EXPIRE_PX2, TimeUnit.SECONDS);
+                if (flag) {
+                    // 上锁成功 执行业务逻辑
+                    try {
+                        // 查询数据库并放入缓存
+                        skuInfo = getInfoDB(skuId);
+                        if (ObjectUtils.isEmpty(skuInfo)) {
+                            // 直接放入一个空的对象就可以了  但是还要给这个对象放入一个过期时间10分钟 因为未来业务量上去的时候这个值早晚会被占用的
+                            SkuInfo skuInfo1 = new SkuInfo();
+                            redisTemplate.opsForValue().set(skuLockKey, skuInfo1, RedisConst.SKUKEY_TEMPORARY_TIMEOUT, TimeUnit.SECONDS);
+                            return skuInfo1;
+                        }
+                        // skuInfo 不为空
+                        redisTemplate.opsForValue().set(skuKey, skuInfo, RedisConst.SKUKEY_TIMEOUT);
+                        return skuInfo;
+                    } finally {
+                        lock.unlock();
+                    }
+                } else {
+                    try {
+                        // 没得到锁 呆一会
+                        Thread.sleep(300);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else {
+                // 缓存有数据
+                return skuInfo;
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-        // TODO
-        return skuInfo;
+        // 用户 数据库 去兜底
+        return getInfoDB(skuId);
+    }
+
+    /**
+     * 通过redis的方式 做分布式锁
+     *
+     * @param skuId skuId
+     * @return SkuInfo
+     */
+    private SkuInfo getSkuInfoRedis(Long skuId) {
+        SkuInfo skuInfo = new SkuInfo();
+        try {
+            String skuKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKUKEY_SUFFIX;
+            // 正常返回Json字符串 但是我们在RedisConfig中将String Hash已经做了序列化处理了 所以可以直接返回
+            // 注意Reids可能存在宕机的情况redisTemplate就无了 所以这块要try一下
+            skuInfo = (SkuInfo) redisTemplate.opsForValue().get(skuKey);
+            //  做了序列化处理 所以我们直接set就可以了
+            // redisTemplate.opsForValue().set(skukey, skuId);
+            if (ObjectUtils.isEmpty(skuInfo)) {
+                // 走数据库 并给缓存
+                // 但是不可以直接去查 一个请求倒是可以 万一一百万条数据的话直接干蹦了! 发生缓存击穿 这个Key一直失效 所以要加锁！
+                /** 一. 先使用Redis上锁
+                 *  1. 先定义一个key  Value使用UUID 以及 锁的超时时间为1s
+                 *  2. 上锁
+                 */
+                String skuLockKey = RedisConst.SKUKEY_PREFIX + skuId + RedisConst.SKULOCK_SUFFIX;
+                String uuid = UUID.randomUUID().toString();
+                Boolean flag = redisTemplate.opsForValue().setIfAbsent(skuKey, uuid, RedisConst.SKULOCK_EXPIRE_PX1, TimeUnit.SECONDS);
+                if (flag) {
+                    // 上锁成功！（获取到了锁）
+                    skuInfo = getInfoDB(skuId);
+                    // !!!但是要防止缓存穿透
+                    if (ObjectUtils.isEmpty(skuInfo)) {
+                        // 直接放入一个空的对象就可以了  但是还要给这个对象放入一个过期时间10分钟 因为未来业务量上去的时候这个值早晚会被占用的
+                        SkuInfo skuInfo1 = new SkuInfo();
+                        redisTemplate.opsForValue().set(skuLockKey, skuInfo1, RedisConst.SKUKEY_TEMPORARY_TIMEOUT, TimeUnit.SECONDS);
+                        return skuInfo1;
+                    }
+                    // 不为空 将数据放入缓存 并返回
+                    redisTemplate.opsForValue().set(skuKey, skuInfo, RedisConst.SKUKEY_TIMEOUT, TimeUnit.SECONDS);
+                    // 别忘了解锁 使用Lua脚本释放锁
+                    DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
+                    // 定义Lua脚本
+                    String script = "if redis.call('get', KEYS[1]) == ARGV[1] " +
+                            "then return redis.call('del', KEYS[1]) " +
+                            "else return 0 end";
+                    redisScript.setScriptText(script);
+                    // 这个类型和 DefaultRedisScript<Long> 的类型中的泛型是一样的
+                    redisScript.setResultType(Long.class);
+                    redisTemplate.execute(redisScript, Arrays.asList(skuLockKey, uuid));
+                    // 返回数据
+                    return skuInfo;
+                }
+            } else {
+                // 读缓存
+                return skuInfo;
+            }
+        } catch (Exception e) {
+            System.out.println("Redis 宕机了...");
+            e.printStackTrace();
+        }
+        // 兜底方案 -> 用数据库兜底
+        // 但是这种方法还是存在风险的 所以一定要快速的修复！或者让Redis使用高可用集群 引出了Redisson
+        return getInfoDB(skuId);
     }
 
     // 根据SkuId查询数据库DB
     private SkuInfo getInfoDB(Long skuId) {
         // 以下相当于走数据库
+        // TODO 如果skuId不存在的情况下 会出现空指针异常
         SkuInfo skuInfo = skuInfoMapper.selectById(skuId);
         List<SkuImage> skuImages = skuImageMapper.selectList(new LambdaQueryWrapper<SkuImage>()
                 .eq(SkuImage::getSkuId, skuId));
         // 将SkuImageList集合赋值给SkuInfo对象
-        skuInfo.setSkuImageList(skuImages);
+        // TODO 如果是空的话 null.setSkuImageList 会报空指针异常
+        if (Objects.nonNull(skuInfo)) {
+            skuInfo.setSkuImageList(skuImages);
+        }
         return skuInfo;
     }
 

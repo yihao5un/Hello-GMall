@@ -151,7 +151,7 @@ public interface ManageService {
      * @param skuId skuId
      * @return SkuInfo
      */
-    SkuInfo getSkuInfo(Long skuId);
+    SkuInfo getSkuInfo(Long skuId) throws InterruptedException;
 
     /**
      * 根据三级分类Id 查询 分类属性名称
