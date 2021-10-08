@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.matrix.gmall.common.cache.GmallCache;
 import com.matrix.gmall.common.constant.RedisConst;
 import com.matrix.gmall.model.product.*;
 import com.matrix.gmall.product.mapper.*;
@@ -307,14 +308,22 @@ public class ManageServiceImpl implements ManageService {
      * 而我们做查询商品详情不需要进行修改操作
      * <p>
      * 综上, 我们为了方便直接存储字符串即可 不需要Hash
+     * <p>
+     * <p>
+     * <p>
+     * 加注解代替 分布式锁的业务逻辑
      */
     @Override
+    @GmallCache(prefix = "sku:")
     public SkuInfo getSkuInfo(Long skuId) throws InterruptedException {
-        return getSkuInfoRedisson(skuId);
+        // 用注解替代掉了  return getSkuInfoRedisson(skuId);
+        // 从数据库中拿
+        return getInfoDB(skuId);
     }
 
     /**
      * 使用 Redisson 做分布式锁
+     *
      * @param skuId skuId
      * @return SkuInfo
      */
@@ -446,12 +455,14 @@ public class ManageServiceImpl implements ManageService {
     }
 
     @Override
+    @GmallCache(prefix = "categoryViewByCategory3Id:")
     public BaseCategoryView getCategoryViewByCategory3Id(Long category3Id) {
         // SELECT * FROM base_category_view WHERE id = 61
         return baseCategoryViewMapper.selectById(category3Id);
     }
 
     @Override
+    @GmallCache(prefix = "skuPrice:")
     public BigDecimal getSkuPrice(Long skuId) {
         SkuInfo skuInfo = skuInfoMapper.selectById(skuId);
         if (!ObjectUtils.isEmpty(skuInfo)) {
@@ -461,11 +472,13 @@ public class ManageServiceImpl implements ManageService {
     }
 
     @Override
+    @GmallCache(prefix = "spuSaleAttListCheckBySku:")
     public List<SpuSaleAttr> getSpuSaleAttListCheckBySku(Long skuId, Long spuId) {
         return spuSaleAttrMapper.selectSpuSaleAttListCheckBySku(skuId, spuId);
     }
 
     @Override
+    @GmallCache(prefix = "skuIdValueIdsMap:")
     public Map<String, Long> getSkuIdValueIdsMap(Long spuId) {
         Map hashMap = new HashMap<>();
         // 调用哪个mapper看调用了哪张表 调用了哪张表看想要的返回的数据是从哪张表里面来的

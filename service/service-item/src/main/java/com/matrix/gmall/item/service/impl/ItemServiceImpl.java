@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 远程调用service-product-client对象 不需要远程去调用数据库
@@ -35,26 +36,58 @@ public class ItemServiceImpl implements ItemService {
          * Value: 对应的数据
          */
         HashMap<String, Object> result = new HashMap<>();
-        // 调用远程服务
-        // 1. 获取的数据是SkuInfo + SkuImageList
-        SkuInfo skuInfo = productFeignClient.getSkuInfo(skuId);
-        result.put("skuInfo", skuInfo);
-        if (Objects.nonNull(skuInfo)) {
+
+        // 改造 -> 使用异步编排 使用多线程
+
+        // supplyAsync 有返回值
+        // 相当于A B C D 均由 A 产生
+        // A 是结果集 -> B C D 并行
+        CompletableFuture<SkuInfo> skuInfoCompletableFuture = CompletableFuture.supplyAsync(() -> {
+            // 调用远程服务
+            // 1. 获取的数据是SkuInfo + SkuImageList
+            SkuInfo skuInfo = productFeignClient.getSkuInfo(skuId);
+            result.put("skuInfo", skuInfo);
+            // 返回数据
+            return skuInfo;
+        });
+
+        // 相当于B
+        CompletableFuture<Void> categoryViewCompletableFuture = skuInfoCompletableFuture.thenAcceptAsync((skuInfo -> {
             // 2. 获取分类数据
             BaseCategoryView categoryView = productFeignClient.getCategoryView(skuInfo.getCategory3Id());
             result.put("categoryView", categoryView);
+        }));
+
+        // 相当于C
+        CompletableFuture<Void> spuSaleAttrListCheckBySkuCompletableFuture  = skuInfoCompletableFuture.thenAcceptAsync((skuInfo -> {
             // 3. 获取销售属性和销售属性值
             List<SpuSaleAttr> spuSaleAttrListCheckBySku = productFeignClient.getSpuSaleAttrListCheckBySku(skuId, skuInfo.getSpuId());
             result.put("spuSaleAttrListCheckBySku", spuSaleAttrListCheckBySku);
+        }));
+
+        // 相当于D
+        CompletableFuture<Void> valueJsonCompletableFuture = skuInfoCompletableFuture.thenAcceptAsync((skuInfo -> {
             // 4. 查询销售属性值Id 和 skuId 组合的Map
             Map<String, Long> skuValueIdsMap = productFeignClient.getSkuValueIdsMap(skuInfo.getSpuId());
             // 将Map转换为页面需要的JSON对象
-            String valueJson= JSON.toJSONString(skuValueIdsMap);
+            String valueJson = JSON.toJSONString(skuValueIdsMap);
             result.put("valueJson", valueJson);
-        }
-        // 5. 获取价格
-        BigDecimal skuPrice = productFeignClient.getSkuPrice(skuId);
-        result.put("price", skuPrice);
+        }));
+
+        CompletableFuture<Void> priceCompletableFuture = CompletableFuture.runAsync(() -> {
+            // 5. 获取价格
+            BigDecimal skuPrice = productFeignClient.getSkuPrice(skuId);
+            result.put("price", skuPrice);
+        });
+
+        // 使用多任务进行组合
+        CompletableFuture.allOf(skuInfoCompletableFuture,
+                categoryViewCompletableFuture,
+                spuSaleAttrListCheckBySkuCompletableFuture,
+                valueJsonCompletableFuture,
+                priceCompletableFuture).join();
+
+        // 返回map 集合 Thymeleaf 渲染: 能用Map存储数据
         return result;
     }
 }

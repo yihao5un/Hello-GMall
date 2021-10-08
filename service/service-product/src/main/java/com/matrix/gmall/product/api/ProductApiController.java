@@ -31,7 +31,7 @@ public class ProductApiController {
     private ManageService manageService;
 
     @GetMapping("inner/getSkuInfo/{skuId}")
-    public SkuInfo getSkuInfo(@PathVariable Long skuId) {
+    public SkuInfo getSkuInfo(@PathVariable Long skuId) throws InterruptedException {
         return manageService.getSkuInfo(skuId);
     }
 
