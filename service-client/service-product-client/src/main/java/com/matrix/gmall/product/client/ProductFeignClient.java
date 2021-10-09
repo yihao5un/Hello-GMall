@@ -1,5 +1,7 @@
 package com.matrix.gmall.product.client;
 
+import com.alibaba.fastjson.JSONObject;
+import com.matrix.gmall.common.result.Result;
 import com.matrix.gmall.model.product.BaseCategoryView;
 import com.matrix.gmall.model.product.SkuInfo;
 import com.matrix.gmall.model.product.SpuSaleAttr;
@@ -74,4 +76,11 @@ public interface ProductFeignClient {
      */
     @GetMapping("/api/product/inner/getSkuValueIdsMap/{spuId}")
     Map<String, Long> getSkuValueIdsMap(@PathVariable Long spuId);
+
+    /**
+     * 获取全部分类信息
+     * @return Result<List<JSONObject>>
+     */
+    @GetMapping("/api/product/getBaseCategoryList")
+    Result<List<JSONObject>> getBaseCategoryList();
 }

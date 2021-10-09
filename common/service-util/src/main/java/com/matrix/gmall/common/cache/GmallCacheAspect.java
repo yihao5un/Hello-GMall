@@ -18,7 +18,8 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author yihaosun
+ * 面试的时候也可以说这个地方用到了AOP + 分布式锁
+ * @Author yihaosun
  */
 @Component
 @Aspect

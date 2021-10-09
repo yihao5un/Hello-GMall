@@ -1,5 +1,6 @@
 package com.matrix.gmall.product.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -9,6 +10,7 @@ import com.matrix.gmall.common.constant.RedisConst;
 import com.matrix.gmall.model.product.*;
 import com.matrix.gmall.product.mapper.*;
 import com.matrix.gmall.product.service.ManageService;
+import org.redisson.Redisson;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +22,10 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import java.math.BigDecimal;
+import java.sql.Array;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @Author: yihaosun
@@ -488,5 +492,77 @@ public class ManageServiceImpl implements ManageService {
             mapList.forEach(map -> hashMap.put(map.get("value_ids"), map.get("sku_id")));
         }
         return hashMap;
+    }
+
+    @Override
+    @GmallCache(prefix = "baseCategoryList")
+    public List<JSONObject> getBaseCategoryList() {
+        // 声明一个集合
+        List<JSONObject> list = new ArrayList<>();
+        // 查询所有的分类数据
+        List<BaseCategoryView> baseCategoryViewList = baseCategoryViewMapper.selectList(null);
+        // index 代表 各个分类中的第几个 初始值为1
+        int index = 1;
+        // 去重可以是 DISTINCT 或者 GROUP BY CategoryId
+        // 按照一级分类Id进行分组
+        // key = category1Id value = List<BaseCategoryView>
+        Map<Long, List<BaseCategoryView>> category1Map = baseCategoryViewList.stream()
+                .collect(Collectors.groupingBy(BaseCategoryView::getCategory1Id));
+        // 遍历当前的集合数据
+        // 1. 获取一级分类数据
+        for (Map.Entry<Long, List<BaseCategoryView>> entry1 : category1Map.entrySet()) {
+            // 获取对应的Key
+            Long category1Id = entry1.getKey();
+            // 获取对应的Value 一级分类Id 对应的 categoryView
+            List<BaseCategoryView> category2List = entry1.getValue();
+            // 获取categoryId 对应的 categoryName
+            String category1Name = category2List.get(0).getCategory1Name();
+            // 赋值
+            JSONObject category1 = new JSONObject();
+            category1.put("index", index);
+            category1.put("categoryName", category1Name);
+            category1.put("categoryId", category1Id);
+//            category1.put("categoryChild", "二级分类数据集合"); 但是不能在这里面不能写
+            // index 迭代
+            index++;
+
+            // 2. 获取二级分类数据
+            Map<Long, List<BaseCategoryView>> category2Map = category2List.stream().collect(Collectors.groupingBy(BaseCategoryView::getCategory2Id));
+            // 声明一个二级分类集合数据
+            List<JSONObject> category2Child = new ArrayList<>();
+            for (Map.Entry<Long, List<BaseCategoryView>> entry2 : category2Map.entrySet()) {
+                Long category2Id = entry2.getKey();
+                List<BaseCategoryView> category3List = entry2.getValue();
+                String category2Name = category3List.get(0).getCategory2Name();
+                JSONObject category2 = new JSONObject();
+                category2.put("categoryName", category2Name);
+                category2.put("categoryId", category2Id);
+//                category2.put("categoryChild", "三级分类集合数据");
+                // 声明一个集合来存储所有的二级分类数据 因为一级对应二级是一对多的关系 现在只取的是一个Id对应二级的所有二级数据的第一组 应该放到一个集合中去
+                // 一级分类目前 共有1-60行数据
+                category2Child.add(category2);
+
+                // 3. 获取三级分类数据
+                // 同样的也要放到一个集合中
+                List<JSONObject> category3Child = new ArrayList<>();
+                category3List.forEach((baseCategoryList) -> {
+                    JSONObject category3 = new JSONObject();
+                    category3.put("categoryName", baseCategoryList.getCategory3Name());
+                    category3.put("categoryId", baseCategoryList.getCategory3Id());
+                    category3Child.add(category3);
+                });
+                // JSONObject 底层是一个Map 所以可以使用put方法
+                // 将三级分类数据放入二级对象
+                category2.put("categoryChild", category3Child);
+            }
+            // JSONObject 底层是一个Map 所以可以使用put方法
+            // 将二级分类数据放入一级对象
+            category1.put("categoryChild", category2Child);
+            // JSONObject 底层是一个Map 所以可以使用put方法
+            // 将一级分类数据放入List中
+            list.add(category1);
+        }
+        // 返回集合数据
+        return list;
     }
 }

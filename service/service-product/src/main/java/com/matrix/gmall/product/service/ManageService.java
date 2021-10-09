@@ -1,5 +1,6 @@
 package com.matrix.gmall.product.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.matrix.gmall.model.product.*;
@@ -110,25 +111,28 @@ public interface ManageService {
 
     /**
      * 回显销售属性和销售属性值(在方法中有
-     *     // 销售属性值对象集合
-     *     @TableField(exist = false)
-     *     List<SpuSaleAttrValue> spuSaleAttrValueList;
-     * 获取销售属性值集合的方法)
+     * // 销售属性值对象集合
      *
-     * 根据spuId 获取销售属性列表
      * @param spuId spuId
      * @return List<SpuSaleAttr>
+     * @TableField(exist = false)
+     * List<SpuSaleAttrValue> spuSaleAttrValueList;
+     * 获取销售属性值集合的方法)
+     * <p>
+     * 根据spuId 获取销售属性列表
      */
     List<SpuSaleAttr> getSpuSaleAttrList(Long spuId);
 
     /**
      * 保存SkuInfo数据
+     *
      * @param skuInfo skuInfo
      */
     void saveSkuInfo(SkuInfo skuInfo);
 
     /**
      * 查询SkuInfo 带分页
+     *
      * @param skuInfoPage skuInfoPage
      * @return IPage<SkuInfo>
      */
@@ -136,25 +140,32 @@ public interface ManageService {
 
     /**
      * 根据skuId上架
+     *
      * @param skuId skuId
      */
     void onSale(Long skuId);
 
     /**
      * 根据skuId下架
+     *
      * @param skuId skuId
      */
     void cancelSale(Long skuId);
 
     /**
      * 根据SkuId 查询 SkuInfo 以及 SkuImageList
+     *
+     * @param skuId skuId
      * @param skuId skuId
      * @return SkuInfo
+     * @return SkuInfo SkuInfo
+     * @throws InterruptedException
      */
     SkuInfo getSkuInfo(Long skuId) throws InterruptedException;
 
     /**
      * 根据三级分类Id 查询 分类属性名称
+     *
      * @param category3Id 注意这个category3Id 就是上面那个方法的 SkuInfo.id
      * @return BaseCategoryView
      */
@@ -162,6 +173,7 @@ public interface ManageService {
 
     /**
      * 根据SkuId查询商品价格
+     *
      * @param skuId skuId
      * @return BigDecimal
      */
@@ -169,6 +181,7 @@ public interface ManageService {
 
     /**
      * 根据SkuId 和 SpuId 查询销售属性和销售属性值
+     *
      * @param skuId skuId
      * @param spuId spuId
      * @return List<SpuSaleAttr>
@@ -177,7 +190,7 @@ public interface ManageService {
 
     /**
      * 根据spuId获取销售属性值Id和skuId的组合数据
-     *
+     * <p>
      * ！！！注意
      * 返回值可以自定义一个实体类{skuId, valueIds} 在字段比较少的时候还可以使用Map数据结构接收Map(key, value);
      * map.put("skuId", "1")
@@ -187,4 +200,15 @@ public interface ManageService {
      * @return Map<String, String>
      */
     Map<String, Long> getSkuIdValueIdsMap(Long spuId);
+
+    /**
+     * 获取全部分类信息 共给WebAll使用 要在service-client中将接口暴露出去
+     * JSONObject
+     * public class JSONObject extends JSON implements Map<String, Object>, Cloneable, Serializable, InvocationHandler {
+     * <p>
+     * }
+     *
+     * @return List<JSONObject>
+     */
+    List<JSONObject> getBaseCategoryList();
 }

@@ -1,5 +1,7 @@
 package com.matrix.gmall.product.client.impl;
 
+import com.alibaba.fastjson.JSONObject;
+import com.matrix.gmall.common.result.Result;
 import com.matrix.gmall.model.product.BaseCategoryView;
 import com.matrix.gmall.model.product.SkuInfo;
 import com.matrix.gmall.model.product.SpuSaleAttr;
@@ -41,6 +43,11 @@ public class ProductDegradeFeignClient implements ProductFeignClient {
 
     @Override
     public Map<String, Long> getSkuValueIdsMap(Long spuId) {
+        return null;
+    }
+
+    @Override
+    public Result<List<JSONObject>> getBaseCategoryList() {
         return null;
     }
 }

@@ -1,5 +1,7 @@
 package com.matrix.gmall.product.api;
 
+import com.alibaba.fastjson.JSONObject;
+import com.matrix.gmall.common.result.Result;
 import com.matrix.gmall.model.product.BaseCategoryView;
 import com.matrix.gmall.model.product.SkuInfo;
 import com.matrix.gmall.model.product.SpuSaleAttr;
@@ -55,5 +57,11 @@ public class ProductApiController {
     @GetMapping("inner/getSkuValueIdsMap/{spuId}")
     public Map<String, Long> getSkuValueIdsMap(@PathVariable Long spuId) {
         return manageService.getSkuIdValueIdsMap(spuId);
+    }
+
+    @GetMapping("getBaseCategoryList")
+    public Result<List<JSONObject>> getBaseCategoryList() {
+        List<JSONObject> baseCategoryList = manageService.getBaseCategoryList();
+        return Result.ok(baseCategoryList);
     }
 }
