@@ -211,4 +211,18 @@ public interface ManageService {
      * @return List<JSONObject>
      */
     List<JSONObject> getBaseCategoryList();
+
+    /**
+     * 通过品牌Id来查询品牌对应数据
+     * @param tmId tmId
+     * @return BaseTrademark
+     */
+    BaseTrademark getTrademarkByTmId(Long tmId);
+
+    /**
+     * 通过SkuId集合查询数据
+     * @param skuId skuId
+     * @return List<BaseAttrInfo>
+     */
+    List<BaseAttrInfo> getAttrList(Long skuId);
 }

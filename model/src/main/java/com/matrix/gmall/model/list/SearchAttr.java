@@ -15,6 +15,4 @@ public class SearchAttr {
     // 平台属性名
     @Field(type = FieldType.Keyword)
     private String attrName;
-
-
 }

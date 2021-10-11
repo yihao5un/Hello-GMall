@@ -2,9 +2,7 @@ package com.matrix.gmall.product.client;
 
 import com.alibaba.fastjson.JSONObject;
 import com.matrix.gmall.common.result.Result;
-import com.matrix.gmall.model.product.BaseCategoryView;
-import com.matrix.gmall.model.product.SkuInfo;
-import com.matrix.gmall.model.product.SpuSaleAttr;
+import com.matrix.gmall.model.product.*;
 import com.matrix.gmall.product.client.impl.ProductDegradeFeignClient;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -83,4 +81,19 @@ public interface ProductFeignClient {
      */
     @GetMapping("/api/product/getBaseCategoryList")
     Result<List<JSONObject>> getBaseCategoryList();
+
+    /**
+     * 通过品牌Id 集合来查询数据
+     * @param tmId tmId
+     * @return BaseTrademark
+     */
+    @GetMapping("/api/product/inner/getTrademark/{tmId}")
+    BaseTrademark getTrademark(@PathVariable("tmId")Long tmId);
+    /**
+     * 通过skuId 集合来查询数据
+     * @param skuId skuId
+     * @return List<BaseAttrInfo>
+     */
+    @GetMapping("/api/product/inner/getAttrList/{skuId}")
+    List<BaseAttrInfo> getAttrList(@PathVariable("skuId") Long skuId);
 }

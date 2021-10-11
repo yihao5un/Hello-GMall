@@ -2,9 +2,7 @@ package com.matrix.gmall.product.client.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.matrix.gmall.common.result.Result;
-import com.matrix.gmall.model.product.BaseCategoryView;
-import com.matrix.gmall.model.product.SkuInfo;
-import com.matrix.gmall.model.product.SpuSaleAttr;
+import com.matrix.gmall.model.product.*;
 import com.matrix.gmall.product.client.ProductFeignClient;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 失败了的话 直接返回空就可以了
+ * 失败了的话的降级方案 直接返回空就可以了
  * 注意加上这个@Component注解
  *
  * @Author: yihaosun
@@ -48,6 +46,16 @@ public class ProductDegradeFeignClient implements ProductFeignClient {
 
     @Override
     public Result<List<JSONObject>> getBaseCategoryList() {
+        return null;
+    }
+
+    @Override
+    public BaseTrademark getTrademark(Long tmId) {
+        return null;
+    }
+
+    @Override
+    public List<BaseAttrInfo> getAttrList(Long skuId) {
         return null;
     }
 }

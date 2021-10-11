@@ -55,4 +55,10 @@ public class BaseTrademarkController {
     public Result<List<BaseTrademark>> getTrademarkList() {
         return Result.ok(baseTrademarkService.list(null));
     }
+
+//    @GetMapping("inner/getTrademark/{tmId}")
+//    public BaseTrademark getTrademark(@PathVariable Long tmId) {
+//        // 根据品牌Id 获取到对应的品牌数据
+//        return baseTrademarkService.getById(tmId);
+//    }
 }

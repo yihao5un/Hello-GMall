@@ -2,9 +2,7 @@ package com.matrix.gmall.product.api;
 
 import com.alibaba.fastjson.JSONObject;
 import com.matrix.gmall.common.result.Result;
-import com.matrix.gmall.model.product.BaseCategoryView;
-import com.matrix.gmall.model.product.SkuInfo;
-import com.matrix.gmall.model.product.SpuSaleAttr;
+import com.matrix.gmall.model.product.*;
 import com.matrix.gmall.product.service.ManageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,7 +16,7 @@ import java.util.Map;
 
 /**
  * 封装数据提供其他微服务使用
- *
+ * <p>
  * 带有inner的URL 表示给内部微服务提供的数据接口
  * 在service-item 用Feign调用接口就能够获取到SkuInfo了
  *
@@ -48,8 +46,8 @@ public class ProductApiController {
     }
 
     @GetMapping("inner/getSpuSaleAttListCheckBySku/{skuId}/{spuId}")
-    public List<SpuSaleAttr> getSpuSaleAttListCheckBySku (@PathVariable Long skuId,
-                                                          @PathVariable Long spuId) {
+    public List<SpuSaleAttr> getSpuSaleAttListCheckBySku(@PathVariable Long skuId,
+                                                         @PathVariable Long spuId) {
         // 注意: 如果有多个参数的话 一定要按照参数的顺序传 不可以随意换位置 否则会传错
         return manageService.getSpuSaleAttListCheckBySku(skuId, spuId);
     }
@@ -63,5 +61,15 @@ public class ProductApiController {
     public Result<List<JSONObject>> getBaseCategoryList() {
         List<JSONObject> baseCategoryList = manageService.getBaseCategoryList();
         return Result.ok(baseCategoryList);
+    }
+
+    @GetMapping("inner/getTrademark/{tmId}")
+    public BaseTrademark getTrademark(@PathVariable Long tmId) {
+        return manageService.getTrademarkByTmId(tmId);
+    }
+
+    @GetMapping("inner/getAttrList/{skuId}")
+    public List<BaseAttrInfo> getAttrList(@PathVariable Long skuId) {
+        return manageService.getAttrList(skuId);
     }
 }

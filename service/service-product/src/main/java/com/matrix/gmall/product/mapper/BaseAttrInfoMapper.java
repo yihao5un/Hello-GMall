@@ -38,4 +38,13 @@ public interface BaseAttrInfoMapper extends BaseMapper<BaseAttrInfo> {
     List<BaseAttrInfo> selectBaseAttrInfoList(@Param("category1Id") Long category1Id,
                                               @Param("category2Id") Long category2Id,
                                               @Param("category3Id") Long category3Id);
+
+    /**
+     * 根据SkuId查询平台属性和属性值数据
+     * 只有一个参数的时候可以不用写注解
+     *
+     * @param skuId skuId
+     * @return List<BaseAttrInfo>
+     */
+    List<BaseAttrInfo> selectBaseAttrInfoListBySkuId(Long skuId);
 }

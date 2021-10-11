@@ -55,7 +55,7 @@
                bav.value_name,
                bav.attr_id
         from gmall_product.base_attr_info bai
-                 inner join gmall_product.base_attr_value bav on bai.id = bav.attr_id
+                     inner join gmall_product.base_attr_value bav on bai.id = bav.attr_id
         <where>
             <if test="category1Id != null and category1Id != 0">
                 or bai.category_id = #{category1Id} and bai.category_level = 1
@@ -67,7 +67,21 @@
                 or bai.category_id = #{category3Id} and bai.category_level = 3
             </if>
         </where>
-        order by bai.category_level , bai.id
+        order by bai.category_level, bai.id
     </select>
 
+    <!-- 根据SkuId查询平台属性和属性值数据 -->
+    <select id="selectBaseAttrInfoListBySkuId" resultMap="BaseAttrInfoMap">
+        SELECT bai.id,
+               bai.attr_name,
+               bai.category_id,
+               bai.category_level,
+               bav.id attr_value_id,
+               bav.value_name,
+               bav.attr_id
+        FROM gmall_product.base_attr_info bai
+                     INNER JOIN gmall_product.base_attr_value bav ON bai.id = bav.attr_id
+                     INNER JOIN gmall_product.sku_attr_value sav ON sav.value_id = bav.id
+        WHERE sav.sku_id = #{skuId}
+    </select>
 </mapper>

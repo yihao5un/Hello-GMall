@@ -10,7 +10,6 @@ import com.matrix.gmall.common.constant.RedisConst;
 import com.matrix.gmall.model.product.*;
 import com.matrix.gmall.product.mapper.*;
 import com.matrix.gmall.product.service.ManageService;
-import org.redisson.Redisson;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +21,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import java.math.BigDecimal;
-import java.sql.Array;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -87,6 +85,8 @@ public class ManageServiceImpl implements ManageService {
     @Autowired
     private RedissonClient redissonClient;
 
+    @Autowired
+    private BaseTradeMarkMapper baseTradeMarkMapper;
 
     @Override
     public List<BaseCategory1> getBaseCategory1() {
@@ -564,5 +564,16 @@ public class ManageServiceImpl implements ManageService {
         }
         // 返回集合数据
         return list;
+    }
+
+    @Override
+    public BaseTrademark getTrademarkByTmId(Long tmId) {
+        return baseTradeMarkMapper.selectById(tmId);
+    }
+
+    @Override
+    public List<BaseAttrInfo> getAttrList(Long skuId) {
+        // 当前这个SkuId所对应的平台属性 平台属性值
+        return baseAttrInfoMapper.selectBaseAttrInfoListBySkuId(skuId);
     }
 }
