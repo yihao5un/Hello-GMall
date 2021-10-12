@@ -50,4 +50,10 @@ public class ListApiController {
         searchService.lowerGoods(skuId);
         return Result.ok();
     }
+
+    @GetMapping("inner/incrHotScore/{skuId}")
+    public Result<String> incrHotScore(@PathVariable("skuId") Long skuId) {
+        searchService.incrHotScore(skuId);
+        return Result.ok();
+    }
 }

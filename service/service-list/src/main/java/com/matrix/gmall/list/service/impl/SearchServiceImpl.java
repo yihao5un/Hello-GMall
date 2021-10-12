@@ -10,11 +10,13 @@ import com.matrix.gmall.model.product.BaseTrademark;
 import com.matrix.gmall.model.product.SkuInfo;
 import com.matrix.gmall.product.client.ProductFeignClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -31,6 +33,9 @@ public class SearchServiceImpl implements SearchService {
 
     @Autowired
     private ProductFeignClient productFeignClient;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @Override
     public void upperGoods(Long skuId) {
@@ -79,5 +84,25 @@ public class SearchServiceImpl implements SearchService {
     public void lowerGoods(Long skuId) {
         // 根据 Id 删除
         this.goodsRepository.deleteById(skuId);
+    }
+
+    @Override
+    public void incrHotScore(Long skuId) {
+        /*
+         * 借助redis 使用redis 必须考虑
+         * 1. 数据类型 zset 自增有序
+         * 2. key的名字 set key value
+         * 3. 缓存常见的三个问题
+         */
+        String hotScoreKey = "hotScore";
+        Double count = redisTemplate.opsForZSet().incrementScore(hotScoreKey, "skuId:" + skuId, 1);
+        if (count % 10 == 0) {
+            // 如果是10的倍数 那么我们就更新一次ES
+            Optional<Goods> optional = this.goodsRepository.findById(skuId);
+            Goods goods = optional.get();
+            goods.setHotScore(count.longValue());
+            // 保存
+            this.goodsRepository.save(goods);
+        }
     }
 }

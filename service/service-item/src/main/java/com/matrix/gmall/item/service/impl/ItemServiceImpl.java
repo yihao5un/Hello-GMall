@@ -1,7 +1,9 @@
 package com.matrix.gmall.item.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.matrix.gmall.common.result.Result;
 import com.matrix.gmall.item.service.ItemService;
+import com.matrix.gmall.list.client.ListFeignClient;
 import com.matrix.gmall.model.product.BaseCategoryView;
 import com.matrix.gmall.model.product.SkuInfo;
 import com.matrix.gmall.model.product.SpuSaleAttr;
@@ -35,6 +37,9 @@ public class ItemServiceImpl implements ItemService {
      */
     @Autowired
     private ThreadPoolExecutor threadPoolExecutor;
+
+    @Autowired
+    private ListFeignClient listFeignClient;
 
     @Override
     public Map<String, Object> getItemBySkuId(Long skuId) {
@@ -92,12 +97,19 @@ public class ItemServiceImpl implements ItemService {
             result.put("price", skuPrice);
         }, threadPoolExecutor);
 
+        CompletableFuture<Void> hotScoreCompletableFuture = CompletableFuture.runAsync(() -> {
+            // 6. 调用热度排名方法
+            listFeignClient.incrHotScore(skuId);
+        }, threadPoolExecutor);
+
         // 使用多任务进行组合
         CompletableFuture.allOf(skuInfoCompletableFuture,
-                categoryViewCompletableFuture,
-                spuSaleAttrListCheckBySkuCompletableFuture,
-                valueJsonCompletableFuture,
-                priceCompletableFuture).join();
+                        categoryViewCompletableFuture,
+                        spuSaleAttrListCheckBySkuCompletableFuture,
+                        valueJsonCompletableFuture,
+                        priceCompletableFuture,
+                        hotScoreCompletableFuture)
+                .join();
 
         // 返回map 集合 Thymeleaf 渲染: 能用Map存储数据
         return result;

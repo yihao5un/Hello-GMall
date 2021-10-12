@@ -23,6 +23,7 @@
         <module>server-gateway</module>
         <module>service-client</module>
         <module>web</module>
+        <module>service-client/service-list-client</module>
     </modules>
 
     <!--父工程以pom的方式打包-->
