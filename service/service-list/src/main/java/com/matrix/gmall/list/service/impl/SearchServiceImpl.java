@@ -4,11 +4,18 @@ import com.matrix.gmall.list.repository.GoodsRepository;
 import com.matrix.gmall.list.service.SearchService;
 import com.matrix.gmall.model.list.Goods;
 import com.matrix.gmall.model.list.SearchAttr;
+import com.matrix.gmall.model.list.SearchParam;
+import com.matrix.gmall.model.list.SearchResponseVo;
 import com.matrix.gmall.model.product.BaseAttrInfo;
 import com.matrix.gmall.model.product.BaseCategoryView;
 import com.matrix.gmall.model.product.BaseTrademark;
 import com.matrix.gmall.model.product.SkuInfo;
 import com.matrix.gmall.product.client.ProductFeignClient;
+import lombok.SneakyThrows;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -36,6 +43,9 @@ public class SearchServiceImpl implements SearchService {
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private RestHighLevelClient restHighLevelClient;
 
     @Override
     public void upperGoods(Long skuId) {
@@ -104,5 +114,50 @@ public class SearchServiceImpl implements SearchService {
             // 保存
             this.goodsRepository.save(goods);
         }
+    }
+
+    @SneakyThrows
+    @Override
+    public SearchResponseVo search(SearchParam searchParam) {
+        /*
+         1. 根据用户检索的条件产生对应的DSL语句 {方法}
+         2. 执行DSL语句并获取到结果集
+         3. 将查询到的结果集进行封装到当前的对象 {方法}
+        */
+        SearchRequest searchRequest = this.buildQueryDsl(searchParam);
+        // 调用search方法 查询数据得到结果集
+        SearchResponse searchResponse = this.restHighLevelClient.search(searchRequest, RequestOptions.DEFAULT);
+        // 将查询出来的结果集进行封装
+        // Total 总记录数在parseSearchResult中去赋值
+        SearchResponseVo responseVo = this.parseSearchResult(searchResponse);
+        // 默认值是 1
+        responseVo.setPageNo(searchParam.getPageNo());
+        // 默认值是 3
+        responseVo.setPageSize(searchParam.getPageSize());
+        // 分页计算方法: 总页数 = 总数 % 每页显示的条数 == 0 ? 总数 / 每页显示的条数 : 总数 / 每页显示的条数 + 1
+        // 如下是分页公式
+        long totalPage = (responseVo.getTotal() + responseVo.getPageSize() - 1) / responseVo.getPageSize();
+        responseVo.setTotalPages(totalPage);
+        return responseVo;
+    }
+
+    /**
+     * 查询数据结果集的转换
+     *
+     * @param searchResponse searchResponse
+     * @return SearchResponseVo
+     */
+    private SearchResponseVo parseSearchResult(SearchResponse searchResponse) {
+        return null;
+    }
+
+    /**
+     * 生成DSL语句
+     *
+     * @param searchParam searchParam
+     * @return SearchRequest
+     */
+    private SearchRequest buildQueryDsl(SearchParam searchParam) {
+        return null;
     }
 }

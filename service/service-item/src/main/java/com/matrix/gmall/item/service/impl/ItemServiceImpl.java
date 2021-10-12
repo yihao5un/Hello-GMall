@@ -111,7 +111,7 @@ public class ItemServiceImpl implements ItemService {
                         hotScoreCompletableFuture)
                 .join();
 
-        // 返回map 集合 Thymeleaf 渲染: 能用Map存储数据
+        // 返回map集合 Thymeleaf 渲染: 能用Map存储数据
         return result;
     }
 }

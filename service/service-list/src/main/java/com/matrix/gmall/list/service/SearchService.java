@@ -1,5 +1,8 @@
 package com.matrix.gmall.list.service;
 
+import com.matrix.gmall.model.list.SearchParam;
+import com.matrix.gmall.model.list.SearchResponseVo;
+
 /**
  * 因为是存放到ES中 所以用不到Mapper
  *
@@ -27,4 +30,11 @@ public interface SearchService {
      * @param skuId skuId
      */
     void incrHotScore(Long skuId);
+
+    /**
+     * 检索数据接口
+     * @param searchParam searchParam
+     * @return SearchResponseVo
+     */
+    SearchResponseVo search(SearchParam searchParam);
 }
