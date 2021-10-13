@@ -12,13 +12,23 @@ import com.matrix.gmall.model.product.BaseTrademark;
 import com.matrix.gmall.model.product.SkuInfo;
 import com.matrix.gmall.product.client.ProductFeignClient;
 import lombok.SneakyThrows;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.Operator;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -107,7 +117,7 @@ public class SearchServiceImpl implements SearchService {
         String hotScoreKey = "hotScore";
         Double count = redisTemplate.opsForZSet().incrementScore(hotScoreKey, "skuId:" + skuId, 1);
         if (count % 10 == 0) {
-            // 如果是10的倍数 那么我们就更新一次ES
+            // 如果是10的倍数 那么我们就更  新一次ES
             Optional<Goods> optional = this.goodsRepository.findById(skuId);
             Goods goods = optional.get();
             goods.setHotScore(count.longValue());
@@ -158,6 +168,129 @@ public class SearchServiceImpl implements SearchService {
      * @return SearchRequest
      */
     private SearchRequest buildQueryDsl(SearchParam searchParam) {
-        return null;
+        // 查询器
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        // 1. 判断用户是否根据分类Id进行查询
+        if (!StringUtils.isEmpty(searchParam.getCategory1Id())) {
+            boolQueryBuilder.filter(QueryBuilders.termQuery("category1Id", searchParam.getCategory1Id()));
+        }
+        if (!StringUtils.isEmpty(searchParam.getCategory2Id())) {
+            boolQueryBuilder.filter(QueryBuilders.termQuery("category2Id", searchParam.getCategory2Id()));
+        }
+        if (!StringUtils.isEmpty(searchParam.getCategory3Id())) {
+            boolQueryBuilder.filter(QueryBuilders.termQuery("category3Id", searchParam.getCategory3Id()));
+        }
+
+        // 2. 判断用户是否根据 Keyword 检索 在检索框里面的
+        if (!StringUtils.isEmpty(searchParam.getKeyword())) {
+            boolQueryBuilder.must(QueryBuilders.matchQuery("title", searchParam.getKeyword()).operator(Operator.AND));
+        }
+
+        // 3. 有可能会根据品牌Id进行过滤 点击品牌那个图标
+        // 格式是: trademark=4:小米
+        String trademark = searchParam.getTrademark();
+        if (!StringUtils.isEmpty(trademark)) {
+            // 进行分割 坑! 不要使用SpringUtils框架的 分割不出来
+            String[] split = trademark.split(":");
+            if (split != null && split.length == 2) {
+                boolQueryBuilder.filter(QueryBuilders.termQuery("tmId", split[0]));
+            }
+        }
+
+        // 4. 看用户是否通过平台属性值进行过滤
+        String[] props = searchParam.getProps();
+        if (props != null && props.length > 0) {
+            for (String prop : props) {
+                // prop 代表的是每个平台属性值过滤的数据
+                String[] split = prop.split(":");
+                if (split != null && split.length == 3) {
+                    // split[0]; 属性Id
+                    // split[1]; 属性值名称
+                    // 创建两个boolQuery
+                    BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
+                    // 嵌套查询子查询
+                    BoolQueryBuilder subBoolQuery = QueryBuilders.boolQuery();
+                    // 设置平台属性Id
+                    subBoolQuery.must(QueryBuilders.termQuery("attrs.attrId", split[0]));
+                    // 设置平台属性值名称
+                    subBoolQuery.must(QueryBuilders.termQuery("attrs.attrId", split[1]));
+                    boolQuery.must(QueryBuilders.nestedQuery("attrs", subBoolQuery, ScoreMode.None));
+                    // 将boolQuery放入最外层
+                    boolQueryBuilder.filter(boolQuery);
+                }
+            }
+        }
+
+        // 5. {query}
+        searchSourceBuilder.query(boolQueryBuilder);
+
+        // 6. 分页
+        // 从结果集中第几条数据开始显示
+        int from = (searchParam.getPageNo() - 1) * searchParam.getPageSize();
+        searchSourceBuilder.from(from);
+        // 默认是3 每页显示三条数据
+        searchSourceBuilder.size(searchParam.getPageSize());
+
+        // 7. 排序 点的时候排序方式发生变化
+        //   1. 表示按照哪个字段进行排序
+        //      1. 表示热度排序 hotScore
+        //      2. 表示价格排序 price
+//        searchSourceBuilder.sort("hotScore", SortOrder.DESC);
+        String order = searchParam.getOrder();
+        if (!StringUtils.isEmpty(order)) {
+            // 声明一个字段
+            String field = "";
+            String[] split = order.split(":");
+            if (split != null && split.length == 2) {
+                // 判断按照什么字段进行排序
+                switch (split[0]) {
+                    case "1":
+                        field = "hotScore";
+                        break;
+                    case "2":
+                        field = "price";
+                        break;
+                    default:
+                }
+                searchSourceBuilder.sort(field, "asc".equals(split[1]) ? SortOrder.ASC : SortOrder.DESC);
+            } else {
+                // 不走If 走默认值
+                searchSourceBuilder.sort("hotScore", SortOrder.DESC);
+            }
+        }
+
+        // 8. 编写高亮
+        HighlightBuilder highlightBuilder = new HighlightBuilder();
+        highlightBuilder.field("title");
+        highlightBuilder.preTags("<span style=color:red>");
+        highlightBuilder.postTags("</span>");
+        searchSourceBuilder.highlighter(highlightBuilder);
+
+        // 9. 聚合
+        TermsAggregationBuilder termsAggregationBuilder = AggregationBuilders
+                .terms("tmIdAgg")
+                .field("tmId")
+                .subAggregation(AggregationBuilders.terms("tmNameAgg").field("tmName"))
+                .subAggregation(AggregationBuilders.terms("tmLogoUrlAgg").field("tmLogoUrl"));
+        // 品牌聚合
+        searchSourceBuilder.aggregation(termsAggregationBuilder);
+        // 销售属性聚合
+        searchSourceBuilder.aggregation(AggregationBuilders.nested("attrAgg", "attrs")
+                .subAggregation(AggregationBuilders.terms("attrIdAgg").field("attrs.attrId"))
+                .subAggregation(AggregationBuilders.terms("attrNameAgg").field("attrs.attrName"))
+                .subAggregation(AggregationBuilders.terms("attrValueAgg").field("attrs.attrValue")));
+
+        // 设置哪些字段显示 哪些字段不显示
+        searchSourceBuilder.fetchSource(
+                new String[]{"id", "title", "defaultImg", "price"}, null);
+        SearchRequest searchRequest = new SearchRequest("goods");
+        searchRequest.types("info");
+        searchRequest.source(searchSourceBuilder);
+        // DSL 语句在这
+        String dsl = searchSourceBuilder.toString();
+        System.out.println("DSL:\t" + dsl);
+        // 返回数据
+        return searchRequest;
     }
 }
