@@ -1,11 +1,9 @@
 package com.matrix.gmall.list.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.matrix.gmall.list.repository.GoodsRepository;
 import com.matrix.gmall.list.service.SearchService;
-import com.matrix.gmall.model.list.Goods;
-import com.matrix.gmall.model.list.SearchAttr;
-import com.matrix.gmall.model.list.SearchParam;
-import com.matrix.gmall.model.list.SearchResponseVo;
+import com.matrix.gmall.model.list.*;
 import com.matrix.gmall.model.product.BaseAttrInfo;
 import com.matrix.gmall.model.product.BaseCategoryView;
 import com.matrix.gmall.model.product.BaseTrademark;
@@ -17,23 +15,30 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation;
+import org.elasticsearch.search.aggregations.bucket.nested.ParsedNested;
+import org.elasticsearch.search.aggregations.bucket.terms.ParsedLongTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -158,7 +163,75 @@ public class SearchServiceImpl implements SearchService {
      * @return SearchResponseVo
      */
     private SearchResponseVo parseSearchResult(SearchResponse searchResponse) {
-        return null;
+        SearchResponseVo searchResponseVo = new SearchResponseVo();
+        SearchHits hits = searchResponse.getHits();
+        // 获取内层Hits
+        SearchHit[] subHits = hits.getHits();
+        // 创建一个GoodsList集合
+        ArrayList<Goods> goodsList = new ArrayList<>();
+        // 赋值goodsList
+        if (subHits != null && subHits.length > 0) {
+            for (SearchHit subHit : subHits) {
+                // sourceAsString 这个是Json数据格式
+                String sourceAsString = subHit.getSourceAsString();
+                // 转换为Java对象
+                Goods goods = JSON.parseObject(sourceAsString, Goods.class);
+                // 如果高亮的不为空 那么应该取高亮的数据
+                if (subHit.getHighlightFields().get("title") != null) {
+                    // 获取到高亮中的数据
+                    Text title = subHit.getHighlightFields().get("title").getFragments()[0];
+                    goods.setTitle(title.toString());
+                }
+                goodsList.add(goods);
+            }
+        }
+        // 赋值goodsList集合
+        searchResponseVo.setGoodsList(goodsList);
+        // 设置品牌数据
+        Map<String, Aggregation> aggregationMap = searchResponse.getAggregations().asMap();
+        ParsedLongTerms tmIdAgg = (ParsedLongTerms) aggregationMap.get("tmIdAgg");
+        List<SearchResponseTmVo> trademarkList = tmIdAgg.getBuckets().stream().map(bucket -> {
+            SearchResponseTmVo searchResponseTmVo = new SearchResponseTmVo();
+            String keyAsString = ((Terms.Bucket) bucket).getKeyAsString();
+            searchResponseTmVo.setTmId(Long.parseLong(keyAsString));
+            // 获取到品牌名称
+            ParsedStringTerms tmNameAgg = ((Terms.Bucket) bucket).getAggregations().get("tmNameAgg");
+            String tmName = tmNameAgg.getBuckets().get(0).getKeyAsString();
+            searchResponseTmVo.setTmName(tmName);
+            // 获取到品牌的URL
+            ParsedStringTerms tmLogoUrlAgg = ((Terms.Bucket) bucket).getAggregations().get("tmLogoUrlAgg");
+            String tmLogoUrl = tmLogoUrlAgg.getBuckets().get(0).getKeyAsString();
+            searchResponseTmVo.setTmLogoUrl(tmLogoUrl);
+            // 返回当前对象
+            return searchResponseTmVo;
+        }).collect(Collectors.toList());
+
+        // 数据类型转换 获取到桶的数据类型集合
+        searchResponseVo.setTrademarkList(trademarkList);
+        // 获取平台属性集合: 聚合 attrAgg --- nested
+        ParsedNested attrAgg = (ParsedNested) aggregationMap.get("attrAgg");
+        ParsedLongTerms attrIdAgg = attrAgg.getAggregations().get("attrIdAgg");
+        List<SearchResponseAttrVo> attrsList = attrIdAgg.getBuckets().stream().map(bucket -> {
+            SearchResponseAttrVo searchResponseAttrVO = new SearchResponseAttrVo();
+            Number keyAsNumber = ((Terms.Bucket) bucket).getKeyAsNumber();
+            searchResponseAttrVO.setAttrId(keyAsNumber.longValue());
+            ParsedStringTerms attrNameAgg = ((Terms.Bucket) bucket).getAggregations().get("attrNameAgg");
+            searchResponseAttrVO.setAttrName(attrNameAgg.getBuckets().get(0).getKeyAsString());
+            // 属性值的集合
+            ParsedStringTerms attrValueAgg = bucket.getAggregations().get("attrValueAgg");
+            // 获取平台属性值集合
+            List<String> attrsValueList = attrValueAgg.getBuckets().stream().map(Terms.Bucket::getKeyAsString).collect(Collectors.toList());
+            // 赋值平台属性值
+            searchResponseAttrVO.setAttrValueList(attrsValueList);
+            // 返回数据
+            return searchResponseAttrVO;
+        }).collect(Collectors.toList());
+        // 赋值平台属性集合
+        searchResponseVo.setAttrsList(attrsList);
+        // 获取到总条数
+        searchResponseVo.setTotal(hits.getTotalHits());
+        // 返回数据
+        return searchResponseVo;
     }
 
     /**
