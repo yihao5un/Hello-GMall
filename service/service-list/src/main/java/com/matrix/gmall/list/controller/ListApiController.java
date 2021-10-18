@@ -3,12 +3,12 @@ package com.matrix.gmall.list.controller;
 import com.matrix.gmall.common.result.Result;
 import com.matrix.gmall.list.service.SearchService;
 import com.matrix.gmall.model.list.Goods;
+import com.matrix.gmall.model.list.SearchParam;
+import com.matrix.gmall.model.list.SearchResponseVo;
+import org.elasticsearch.action.search.SearchResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 创建索引库
@@ -55,5 +55,11 @@ public class ListApiController {
     public Result<String> incrHotScore(@PathVariable("skuId") Long skuId) {
         searchService.incrHotScore(skuId);
         return Result.ok();
+    }
+
+    @PostMapping
+    public Result<SearchResponseVo> list(@RequestBody SearchParam searchParam) {
+        SearchResponseVo searchResponseVo = searchService.search(searchParam);
+        return Result.ok(searchResponseVo);
     }
 }

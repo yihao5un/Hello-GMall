@@ -2,7 +2,10 @@ package com.matrix.gmall.list.client.impl;
 
 import com.matrix.gmall.common.result.Result;
 import com.matrix.gmall.list.client.ListFeignClient;
+import com.matrix.gmall.model.list.SearchParam;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
 
 /**
  * @Author: yihaosun
@@ -11,7 +14,22 @@ import org.springframework.stereotype.Component;
 @Component
 public class ListDegradeFeignClient implements ListFeignClient {
     @Override
-    public Result incrHotScore(Long skuId) {
+    public Result<String> incrHotScore(Long skuId) {
+        return null;
+    }
+
+    @Override
+    public Result list(SearchParam listParam) {
+        return null;
+    }
+
+    @Override
+    public Result<String> upperGoods(Long skuId) {
+        return null;
+    }
+
+    @Override
+    public Result<String> lowerGoods(Long skuId) {
         return null;
     }
 }
