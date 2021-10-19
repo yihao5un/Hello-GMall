@@ -5,7 +5,6 @@ import com.matrix.gmall.list.client.ListFeignClient;
 import com.matrix.gmall.model.list.SearchParam;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
 
 /**
  * @Author: yihaosun
