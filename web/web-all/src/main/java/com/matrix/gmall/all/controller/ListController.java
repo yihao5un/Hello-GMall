@@ -36,16 +36,17 @@ public class ListController {
         String urlParam = makeUrlParam(searchParam);
         // 处理品牌条件回显
         String trademarkParam = makeTrademark(searchParam.getTrademark());
-        // 处理平台属性条件回显
-        List<Map<String, String>> maps = makeProps(searchParam.getProps());
-        // 处理排序
+        // 处理平台属性条件回显 表示平台属性的面包屑
+        List<Map<String, String>> propsParamList = makeProps(searchParam.getProps());
+        // 处理排序 1:hotScore 2:price
         Map<String, Object> orderMap = dealOrder(searchParam.getOrder());
 
         model.addAttribute("searchParam", searchParam);
         model.addAttribute("urlParam", urlParam);
         model.addAttribute("trademarkParam", trademarkParam);
-        model.addAttribute("propsParamList", maps);
+        model.addAttribute("propsParamList", propsParamList);
         model.addAttribute("orderMap", orderMap);
+
         return "list/index";
     }
 
@@ -111,14 +112,14 @@ public class ListController {
      */
     private List<Map<String, String>> makeProps(String[] props) {
         List<Map<String, String>> list = new ArrayList<>();
-        //2:v:n
+        // id:value:name
         if (props != null && props.length != 0) {
             for (String prop : props) {
-                //prop = 2:6.25-6.34英寸:屏幕尺寸
-                //prop = 4:64GB:机身存储
+                // prop = 2:6.25-6.34英寸:屏幕尺寸
+                // prop = 4:64GB:机身存储
                 String[] split = StringUtils.split(prop, ":");
                 if (split != null && split.length == 3) {
-                    //声明一个Map
+                    // 声明一个Map
                     HashMap<String, String> map = new HashMap<>();
                     map.put("attrId", split[0]);
                     map.put("attrValue", split[1]);
@@ -132,7 +133,7 @@ public class ListController {
 
     /**
      * 处理排序
-     *
+     * order=1:asc order=1:desc
      * @param order order
      * @return Map<String, Object>
      */
@@ -141,12 +142,13 @@ public class ListController {
         if (!StringUtils.isEmpty(order)) {
             String[] split = StringUtils.split(order, ":");
             if (split != null && split.length == 2) {
-                //传递的哪个字段
+                // 传递的哪个字段
                 objectMap.put("type", split[0]);
-                //升序降序
+                // 升序降序
                 objectMap.put("sort", split[1]);
             }
         } else {
+            // 默认值
             objectMap.put("type", "1");
             objectMap.put("sort", "asc");
         }
