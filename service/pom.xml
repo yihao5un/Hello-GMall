@@ -16,6 +16,7 @@
         <module>service-product</module>
         <module>service-item</module>
         <module>service-list</module>
+        <module>service-user</module>
     </modules>
 
     <!-- 充当一个父亲工程 -->
