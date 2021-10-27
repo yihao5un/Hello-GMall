@@ -81,5 +81,9 @@ spring:
           uri: lb://web-all
           predicates:
             - Host=activity.gmall.com
+
+# 1. 访问以下路径的时候 需要登陆
+# 2. 需要控制不让用户直接登陆到我们内部的接口/api/product/inner/
+# 3. 下订单的时候 可能需要访问的URL: /api/**/auth/** 也需要登陆 否则不能访问
 authUrls:
-  url: trade.html,myOrder.html #,list.html,addCart.html
+  url: trade.html,myOrder.html  #,list.html,addCart.html

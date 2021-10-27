@@ -8,10 +8,7 @@ import com.matrix.gmall.model.user.UserInfo;
 import com.matrix.gmall.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
@@ -37,7 +34,7 @@ public class PassportApiController {
         /**
          * 1. 登陆成功后需要生成token 然后将token放入cookie中 和 userInfo对象
          *  Cookie cookie = new Cookie("name", "111");
-         * 2. 设置作用域 只有在这个作用域下 才可以得到key的值
+         * 2. 设置作用域 只有在这个作用域下 才可以得到key的值 解决跨域
          *  cookie.setDomain("gmall.com");
          * 3. 设置项目的跟路径
          *  cookie.setPath("/");
@@ -71,5 +68,17 @@ public class PassportApiController {
         } else {
             return Result.fail().message("登陆失败!");
         }
+    }
+
+    @GetMapping("logout")
+    public Result logout(HttpServletRequest request) {
+        // 登陆的时候存在了 Redis 和 Cookie 中 登出的时候我们要把他们给删掉
+        // 缓存的 key
+        // 获取 token 得到缓存的 key
+        // token 存储在 cookie中 还存在在 header 中
+        String token =  request.getHeader("token");
+        String userKey = "user:login:" + token;
+        this.redisTemplate.delete(userKey);
+        return Result.ok();
     }
 }
