@@ -5,13 +5,20 @@ import com.matrix.gmall.model.base.BaseEntity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.List;
 
-@Data
+/**
+ * @Author yihaosun
+ */
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @ApiModel(description = "购物车")
 public class CartInfo extends BaseEntity {
     private static final long serialVersionUID = 1L;
@@ -58,5 +65,4 @@ public class CartInfo extends BaseEntity {
     @ApiModelProperty(value = "购物项对应的优惠券信息")
     @TableField(exist = false)
     private List<CouponInfo> couponInfoList;
-
 }
