@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpCookie;
@@ -25,12 +24,13 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @Author: yihaosun
  * @Date: 2021/10/27 20:39
  */
-//@Configuration
+//@Configuration 和 @Component 的区别？
 @Component
 public class AuthGlobalFilter implements GlobalFilter {
     // 从配置文件中获取到都有谁
@@ -58,6 +58,7 @@ public class AuthGlobalFilter implements GlobalFilter {
 
         // 获取用户Id 那么就是登陆了 如果没有就没有登陆
         String userId = this.getUserId(request);
+        String userTempId = this.getUserTempId(request);
         if ("-1".equals(userId)) {
             // 被盗用了
             ServerHttpResponse response = exchange.getResponse();
@@ -94,13 +95,39 @@ public class AuthGlobalFilter implements GlobalFilter {
         }
 
         // 验证通过之后: 将用户的Id传递给后台微服务
-        if (!StringUtils.isEmpty(userId)) {
-            // 需要将用户Id 放入请求头中
-            request.mutate().header("userId", userId).build();
+        if (!StringUtils.isEmpty(userId) || !StringUtils.isEmpty(userTempId)) {
+            if (!StringUtils.isEmpty(userId)) {
+                // 需要将用户Id 放入请求头中
+                request.mutate().header("userId", userId).build();
+            }
+            if (!StringUtils.isEmpty(userTempId)) {
+                // 需要将临时用户Id 放入请求头中
+                request.mutate().header("userTempId", userTempId).build();
+            }
             return chain.filter(exchange.mutate().request(request).build());
         }
         // 默认返回
         return chain.filter(exchange);
+    }
+
+    /**
+     * 获取临时用户Id
+     * @param request request
+     * @return String
+     */
+    private String getUserTempId(ServerHttpRequest request) {
+        String userTempId = "";
+        // 存储带cookie中
+        HttpCookie httpCookie = request.getCookies().getFirst("userTempId");
+        if (Objects.nonNull(httpCookie)) {
+            userTempId = httpCookie.getValue();
+        } else {
+            List<String> list = request.getHeaders().get("userTempId");
+            if (!CollectionUtils.isEmpty(list)) {
+                userTempId = list.get(0);
+            }
+        }
+        return userTempId;
     }
 
     /**

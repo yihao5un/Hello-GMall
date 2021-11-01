@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @ComponentScan(basePackages = "com.matrix.gmall")
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = "com.matrix.gmall")
+// 开启异步
 @EnableAsync
 public class ServiceCartApplication {
     public static void main(String[] args) {
