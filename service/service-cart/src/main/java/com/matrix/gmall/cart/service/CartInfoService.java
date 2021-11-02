@@ -1,5 +1,9 @@
 package com.matrix.gmall.cart.service;
 
+import com.matrix.gmall.model.cart.CartInfo;
+
+import java.util.List;
+
 /**
  * @Author: yihaosun
  * @Date: 2021/10/28 21:00
@@ -7,9 +11,19 @@ package com.matrix.gmall.cart.service;
 public interface CartInfoService {
     /**
      * 添加购物车的方法
+     *
      * @param skuId skuId
      * @param userId userId
      * @param skuNum skuNum
      */
     void addToCart(Long skuId, String userId, Integer skuNum);
+
+    /**
+     * 根据用户(临时用户)查询购物车列表
+     *
+     * @param userId userId
+     * @param userTempId userTempId
+     * @return List<CartInfo>
+     */
+    List<CartInfo> getCartList(String userId, String userTempId);
 }

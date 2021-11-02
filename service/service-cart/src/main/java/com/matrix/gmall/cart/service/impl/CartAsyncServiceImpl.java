@@ -8,6 +8,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 /**
+ * 同步Redis 异步MySQL
+ *
  * @Author: yihaosun
  * @Date: 2021/11/1 15:38
  */
