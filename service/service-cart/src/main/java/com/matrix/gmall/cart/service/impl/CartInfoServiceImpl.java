@@ -48,17 +48,27 @@ public class CartInfoServiceImpl implements CartInfoService {
         /**
          * TODO 事务二: 通过AOP切面的方式
          */
-        CartInfo cartInfoExit = null;
-        String cartKey = null;
-        try {
-            // 根据userId 和 skuId 能够确定唯一的商品
-            cartInfoExit = cartInfoMapper.selectOne(new LambdaQueryWrapper<CartInfo>()
-                    .eq(CartInfo::getUserId, userId)
-                    .eq(CartInfo::getSkuId, skuId));
+        // 添加缓存
+        // 获取到购物车的Key
+        String cartKey = getCartKey(userId);
 
-            // 添加缓存
-            // 获取到购物车的Key
-            cartKey = getCartKey(userId);
+        // 购物车的Key在缓存中不存在
+        if (!redisTemplate.hasKey(cartKey)) {
+            // 加载数据库的数据到缓存 为了防止缓存和数据库不一致的问题
+            this.loadCartCache(userId);
+        }
+        CartInfo cartInfoExit = null;
+
+        try {
+            // 优化方式二
+            // 到这个地方 说明缓存一定有数据了 可以将下面的查询给注释掉了
+            cartInfoExit = (CartInfo) redisTemplate.boundHashOps(cartKey).get(skuId.toString());
+            // 等同于 redisTemplate.opsForHash().get(cartKey,skuId.toString());
+
+            // 根据userId 和 skuId 能够确定唯一的商品
+            // cartInfoExit = cartInfoMapper.selectOne(new LambdaQueryWrapper<CartInfo>()
+            //  .eq(CartInfo::getUserId, userId)
+            //  .eq(CartInfo::getSkuId, skuId));
 
             // 判断数据是否为空 如果为空的话 那么插入这条数据
             if (cartInfoExit != null) {
@@ -138,23 +148,52 @@ public class CartInfoServiceImpl implements CartInfoService {
 
         if (CollectionUtils.isEmpty(cartInfoList)) {
             // 缓存中没有数据 从数据库获取并放入缓存
-            // TODO cartInfoList = this.loadCartCache(userId);
-            // 返回数据
-            return cartInfoList;
-        } else {
-            // 排序
-            cartInfoList.sort(new Comparator<CartInfo>() {
-                @Override
-                public int compare(CartInfo o1, CartInfo o2) {
-                    // 按照修改时间进行排序 后面的减去前面的
-                    return DateUtil.truncatedCompareTo(o2.getUpdateTime(),
-                            o1.getUpdateTime(),
-                            Calendar.SECOND);
-                }
-            });
-            return cartInfoList;
+            cartInfoList = this.loadCartCache(userId);
         }
-//        return null;
+        // 排序
+        cartInfoList.sort(new Comparator<CartInfo>() {
+            @Override
+            public int compare(CartInfo o1, CartInfo o2) {
+                // 按照修改时间进行排序 后面的减去前面的
+                return DateUtil.truncatedCompareTo(o2.getUpdateTime(),
+                        o1.getUpdateTime(),
+                        Calendar.SECOND);
+            }
+        });
+        return cartInfoList;
+    }
+
+    /**
+     * 根据用户Id查询数据 并放入缓存
+     *
+     * @param userId userId
+     */
+    private List<CartInfo> loadCartCache(String userId) {
+        List<CartInfo> cartInfoList = cartInfoMapper.selectList(
+                new LambdaQueryWrapper<CartInfo>()
+                        .eq(CartInfo::getUserId, userId)
+                        .orderByDesc(CartInfo::getUpdateTime));
+
+        // 数据库中不存在 直接返回
+        if (CollectionUtils.isEmpty(cartInfoList)) {
+            return new ArrayList<>();
+        }
+
+        String cartKey = this.getCartKey(userId);
+        Map<String, CartInfo> map = new HashMap<>();
+        // 遍历集合并放入缓存 同时将skuPrice赋值
+        for (CartInfo cartInfo : cartInfoList) {
+            // 查询一下实时的价格
+            cartInfo.setSkuPrice(productFeignClient.getSkuPrice(cartInfo.getSkuId()));
+            // redisTemplate.opsForHash().put(cartKey, cartInfo.getSkuId().toString(), cartInfo);
+            map.put(cartInfo.getSkuId().toString(), cartInfo);
+        }
+        // 将多次写入改为一次写入 相当与hmset
+        redisTemplate.opsForHash().putAll(cartKey, map);
+
+        // 设置缓存的过期时间
+        this.setCartKeyExpire(cartKey);
+        return cartInfoList;
     }
 
     private void addCartOne(Long skuId, String userId, Integer skuNum) {

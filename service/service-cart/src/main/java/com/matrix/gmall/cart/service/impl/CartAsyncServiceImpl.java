@@ -27,6 +27,7 @@ public class CartAsyncServiceImpl implements CartAsyncService {
     @Override
     @Async
     public void updateCartInfo(CartInfo cartInfo) {
+        // TODO 代码有问题 存在Id为NULL的情况
         cartInfoMapper.updateById(cartInfo);
     }
 }

@@ -2,15 +2,15 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <meta charset="utf-8" />
+    <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=9; IE=8; IE=7; IE=EDGE">
-    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />
+    <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7"/>
     <title>尚品汇 我的购物车</title>
     <link rel="icon" href="/img/favicon.ico">
 
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
-    <link rel="stylesheet" type="text/css" href="/css/all.css" />
-    <link rel="stylesheet" type="text/css" href="/css/pages-cart.css" />
+    <link rel="stylesheet" type="text/css" href="/css/all.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/pages-cart.css"/>
 
     <div th:include="common/head :: head"></div>
 </head>
@@ -28,19 +28,20 @@
         <h4>全部商品<span></span></h4>
         <div class="cart-main">
             <div class="yui3-g cart-th">
-                <div class="yui3-u-1-4"><input class="chooseAll" type="checkbox" name="" id="" value="" /> 全部</div>
+                <div class="yui3-u-1-4"><input class="chooseAll" type="checkbox" name="" id="" value=""/> 全部</div>
                 <div class="yui3-u-1-4">商品</div>
                 <div class="yui3-u-1-8">单价（元）</div>
                 <div class="yui3-u-1-8">数量</div>
                 <div class="yui3-u-1-8">小计（元）</div>
                 <div class="yui3-u-1-8">操作</div>
             </div>
-            <div class="cart-item-list" >
+            <div class="cart-item-list">
                 <div class="cart-body">
                     <div class="cart-list" v-for="item in data" :key="item.id">
                         <ul class="goods-list yui3-g">
                             <li class="yui3-u-1-24">
-                                <input type="checkbox" v-model="item.isChecked" @click="checkCart(item)" name="chk_list"/>
+                                <input type="checkbox" v-model="item.isChecked" @click="checkCart(item)"
+                                       name="chk_list"/>
                             </li>
                             <li class="yui3-u-6-24">
                                 <div class="good-item">
@@ -54,12 +55,12 @@
                             <li class="yui3-u-1-8"><span class="price">{{ item.skuPrice }}</span></li>
                             <li class="yui3-u-1-8">
                                 <a href="javascript:void(0)" class="increment mins" @click="down(item)">-</a>
-                                <input :value="item.skuNum"  minnum="1" class="itxt" />
+                                <input :value="item.skuNum" minnum="1" class="itxt"/>
                                 <a href="javascript:void(0)" class="increment plus" @click="add(item)">+</a>
                             </li>
-                            <li class="yui3-u-1-8"><span class="sum" >{{ item.skuPrice * item.skuNum }}</span></li>
+                            <li class="yui3-u-1-8"><span class="sum">{{ item.skuPrice * item.skuNum }}</span></li>
                             <li class="yui3-u-1-8">
-                                <a href="javascript:void(0)" @click="deleteCart(item.skuId)">删除</a><br />
+                                <a href="javascript:void(0)" @click="deleteCart(item.skuId)">删除</a><br/>
                                 <a href="#none">移到收藏</a>
                             </li>
                         </ul>
@@ -70,7 +71,7 @@
         </div>
         <div class="cart-tool">
             <div class="select-all">
-                <input class="chooseAll" type="checkbox"  name=""  value="" />
+                <input class="chooseAll" type="checkbox" name="" value=""/>
                 <span>全选</span>
             </div>
             <div class="option">
@@ -79,7 +80,7 @@
                 <a href="#none">清除下柜商品</a>
             </div>
             <div class="money-box">
-                <div class="chosed">已选择<span >{{count}}</span>件商品</div>
+                <div class="chosed">已选择<span>{{count}}</span>件商品</div>
                 <div class="sumprice">
                     <span><em>总价（不含运费） ：</em><i class="summoney">{{total}}</i></span>
                     <span><em>已节省：</em><i></i></span>
@@ -107,7 +108,7 @@
                             <div class="active item">
                                 <ul>
                                     <li>
-                                        <img src="/img/like1.png" />
+                                        <img src="/img/like1.png"/>
                                         <div class="intro">
                                             <i>Apple苹果iPhone 6s (A1699)</i>
                                         </div>
@@ -115,11 +116,12 @@
                                             <span>$29.00</span>
                                         </div>
                                         <div class="incar">
-                                            <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i class="car"></i><span class="cartxt">加入购物车</span></a>
+                                            <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i
+                                                    class="car"></i><span class="cartxt">加入购物车</span></a>
                                         </div>
                                     </li>
                                     <li>
-                                        <img src="/img/like2.png" />
+                                        <img src="/img/like2.png"/>
                                         <div class="intro">
                                             <i>Apple苹果iPhone 6s (A1699)</i>
                                         </div>
@@ -127,11 +129,12 @@
                                             <span>$29.00</span>
                                         </div>
                                         <div class="incar">
-                                            <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i class="car"></i><span class="cartxt">加入购物车</span></a>
+                                            <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i
+                                                    class="car"></i><span class="cartxt">加入购物车</span></a>
                                         </div>
                                     </li>
                                     <li>
-                                        <img src="/img/like3.png" />
+                                        <img src="/img/like3.png"/>
                                         <div class="intro">
                                             <i>Apple苹果iPhone 6s (A1699)</i>
                                         </div>
@@ -139,11 +142,12 @@
                                             <span>$29.00</span>
                                         </div>
                                         <div class="incar">
-                                            <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i class="car"></i><span class="cartxt">加入购物车</span></a>
+                                            <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i
+                                                    class="car"></i><span class="cartxt">加入购物车</span></a>
                                         </div>
                                     </li>
                                     <li>
-                                        <img src="/img/like4.png" />
+                                        <img src="/img/like4.png"/>
                                         <div class="intro">
                                             <i>Apple苹果iPhone 6s (A1699)</i>
                                         </div>
@@ -151,7 +155,8 @@
                                             <span>$29.00</span>
                                         </div>
                                         <div class="incar">
-                                            <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i class="car"></i><span class="cartxt">加入购物车</span></a>
+                                            <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i
+                                                    class="car"></i><span class="cartxt">加入购物车</span></a>
                                         </div>
                                     </li>
                                 </ul>
@@ -159,7 +164,7 @@
                             <div class="item">
                                 <ul>
                                     <li>
-                                        <img src="/img/like1.png" />
+                                        <img src="/img/like1.png"/>
                                         <div class="intro">
                                             <i>Apple苹果iPhone 6s (A1699)</i>
                                         </div>
@@ -167,11 +172,12 @@
                                             <span>$29.00</span>
                                         </div>
                                         <div class="incar">
-                                            <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i class="car"></i><span class="cartxt">加入购物车</span></a>
+                                            <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i
+                                                    class="car"></i><span class="cartxt">加入购物车</span></a>
                                         </div>
                                     </li>
                                     <li>
-                                        <img src="/img/like2.png" />
+                                        <img src="/img/like2.png"/>
                                         <div class="intro">
                                             <i>Apple苹果iPhone 6s (A1699)</i>
                                         </div>
@@ -179,11 +185,12 @@
                                             <span>$29.00</span>
                                         </div>
                                         <div class="incar">
-                                            <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i class="car"></i><span class="cartxt">加入购物车</span></a>
+                                            <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i
+                                                    class="car"></i><span class="cartxt">加入购物车</span></a>
                                         </div>
                                     </li>
                                     <li>
-                                        <img src="/img/like3.png" />
+                                        <img src="/img/like3.png"/>
                                         <div class="intro">
                                             <i>Apple苹果iPhone 6s (A1699)</i>
                                         </div>
@@ -191,11 +198,12 @@
                                             <span>$29.00</span>
                                         </div>
                                         <div class="incar">
-                                            <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i class="car"></i><span class="cartxt">加入购物车</span></a>
+                                            <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i
+                                                    class="car"></i><span class="cartxt">加入购物车</span></a>
                                         </div>
                                     </li>
                                     <li>
-                                        <img src="/img/like4.png" />
+                                        <img src="/img/like4.png"/>
                                         <div class="intro">
                                             <i>Apple苹果iPhone 6s (A1699)</i>
                                         </div>
@@ -203,7 +211,8 @@
                                             <span>$29.00</span>
                                         </div>
                                         <div class="incar">
-                                            <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i class="car"></i><span class="cartxt">加入购物车</span></a>
+                                            <a href="#" class="sui-btn btn-bordered btn-xlarge btn-default"><i
+                                                    class="car"></i><span class="cartxt">加入购物车</span></a>
                                         </div>
                                     </li>
                                 </ul>
@@ -331,11 +340,11 @@
 
             // 计算
             compute() {
-                if(this.data == null) return
+                if (this.data == null) return
                 // debugger
                 this.count = 0
                 this.total = 0
-                for(var i=0; i<this.data.length; i++) {
+                for (var i = 0; i < this.data.length; i++) {
                     this.total += this.data[i].skuPrice * this.data[i].skuNum
                     if (this.data[i].isChecked == 1) {
                         this.count += 1
@@ -343,7 +352,7 @@
                 }
             },
 
-            addToCart(skuId, skuNum=1) {
+            addToCart(skuId, skuNum = 1) {
                 cart.addToCart(skuId, skuNum).then(response => {
                     this.init()
                 })
@@ -354,7 +363,7 @@
             },
 
             down(item) {
-                if(item.skuNum > 1) {
+                if (item.skuNum > 1) {
                     this.addToCart(item.skuId, -1)
                 }
             },
@@ -381,19 +390,19 @@
 
             trade() {
                 debugger
-                if(!auth.isLogin()) {
-                    window.location.href = 'http://www.gmall.com/login.html?originUrl='+window.location.href
+                if (!auth.isLogin()) {
+                    window.location.href = 'http://www.gmall.com/login.html?originUrl=' + window.location.href
                     return
                 }
 
                 var isChecked = 0
-                for(var i=0; i<this.data.length; i++) {
+                for (var i = 0; i < this.data.length; i++) {
                     if (this.data[i].isChecked == 1) {
                         isChecked = 1
                         break
                     }
                 }
-                if(isChecked == 1) {
+                if (isChecked == 1) {
                     window.location.href = 'http://order.gmall.com/trade.html'
                 } else {
                     alert('请选择购买的商品')
@@ -402,7 +411,5 @@
         }
     })
 </script>
-
 </body>
-
 </html>

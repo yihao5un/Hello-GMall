@@ -19,6 +19,5 @@ public interface CartAsyncService {
      * 更新
      * @param cartInfo cartInfo
      */
-    // TODO 代码有问题
     void updateCartInfo(CartInfo cartInfo);
 }
