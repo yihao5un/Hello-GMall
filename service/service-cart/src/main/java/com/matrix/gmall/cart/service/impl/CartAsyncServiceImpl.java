@@ -1,5 +1,6 @@
 package com.matrix.gmall.cart.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.matrix.gmall.cart.mapper.CartInfoMapper;
 import com.matrix.gmall.cart.service.CartAsyncService;
 import com.matrix.gmall.model.cart.CartInfo;
@@ -27,7 +28,9 @@ public class CartAsyncServiceImpl implements CartAsyncService {
     @Override
     @Async
     public void updateCartInfo(CartInfo cartInfo) {
-        // TODO 代码有问题 存在Id为NULL的情况
-        cartInfoMapper.updateById(cartInfo);
+        // TODO 代码有问题 存在Id为NULL的情况 需要构建更新条件
+        cartInfoMapper.update(cartInfo, new LambdaQueryWrapper<CartInfo>()
+                .eq(CartInfo::getSkuId, cartInfo.getSkuId())
+                .eq(CartInfo::getUserId, cartInfo.getUserId()));
     }
 }
