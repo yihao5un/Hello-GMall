@@ -1,6 +1,7 @@
 package com.matrix.gmall.cart.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.matrix.gmall.cart.mapper.CartInfoMapper;
 import com.matrix.gmall.cart.service.CartAsyncService;
 import com.matrix.gmall.model.cart.CartInfo;
@@ -32,5 +33,23 @@ public class CartAsyncServiceImpl implements CartAsyncService {
         cartInfoMapper.update(cartInfo, new LambdaQueryWrapper<CartInfo>()
                 .eq(CartInfo::getSkuId, cartInfo.getSkuId())
                 .eq(CartInfo::getUserId, cartInfo.getUserId()));
+    }
+
+    @Override
+    @Async
+    public void delCartInfo(String userId) {
+        cartInfoMapper.delete(new LambdaQueryWrapper<CartInfo>()
+                .eq(CartInfo::getUserId, userId));
+    }
+
+    @Override
+    @Async
+    public void checkCart(String userId, Integer isChecked, Long skuId) {
+        CartInfo cartInfo = CartInfo.builder().isChecked(isChecked).build();
+        cartInfoMapper.update(cartInfo, new UpdateWrapper<CartInfo>()
+                .eq("user_id", userId)
+                .eq("sku_id", skuId));
+        // .set("is_check", isChecked)
+        // updateWrapper 里面有 set 直接给字段名 和 字段值就可以了
     }
 }

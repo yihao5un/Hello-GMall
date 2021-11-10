@@ -19,6 +19,7 @@ import org.springframework.util.StringUtils;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @Author: yihaosun
@@ -129,13 +130,140 @@ public class CartInfoServiceImpl implements CartInfoService {
         // 查询登陆时的购物车
         List<CartInfo> cartInfoList = new ArrayList<>();
         if (!StringUtils.isEmpty(userId)) {
-            cartInfoList = this.getCartList(userId);
+            // 有可能发生合并购物车
+            // 获取临时购物车数据
+            List<CartInfo> cartList = new ArrayList<>();
+            if (StringUtils.isEmpty(userTempId)) {
+                cartInfoList = this.getCartList(userId);
+                return cartInfoList;
+            } else {
+                cartList = this.getCartList(userTempId);
+            }
+
+            if (!CollectionUtils.isEmpty(cartList)) {
+                // 未登陆购物车数据有值 发生合并操作
+                cartInfoList = this.mergeToCartList(cartList, userId);
+                // 删除临时购物车数据
+                this.deleteCartList(userTempId);
+            } else {
+                // 只查询登陆购物车数据
+                cartInfoList = this.getCartList(userId);
+            }
         }
 
         // 查询临时购物车数据
         if (!StringUtils.isEmpty(userTempId)) {
             cartInfoList = this.getCartList(userTempId);
         }
+        return cartInfoList;
+    }
+
+    @Override
+    public void checkCart(String userId, Integer isChecked, Long skuId) {
+        // 操作数据库
+        cartAsyncService.checkCart(userId, isChecked, skuId);
+        String cartKey = this.getCartKey(userId);
+        // 同步Redis 获取购物车Key
+//        CartInfo cartInfo = (CartInfo) redisTemplate.opsForHash().get(cartKey, skuId.toString());
+//        if (Objects.nonNull(cartInfo)) {
+//            // 变更状态
+//            cartInfo.setIsChecked(isChecked);
+//            // 将变更之后的数据放入缓存
+//            redisTemplate.opsForHash().put(cartKey, skuId.toString(), cartInfo);
+//            // 可以考虑是否需要重新设置过期时间
+//            this.setCartKeyExpire(cartKey);
+//        }
+        // 判断当前购物车 中是否有当前商品 大的Key中是否有小的Key
+        Boolean flag = redisTemplate.boundHashOps(cartKey).hasKey(skuId.toString());
+        if (flag) {
+            // 有数据
+            CartInfo cartInfo = (CartInfo) redisTemplate.boundHashOps(cartKey).get(skuId.toString());
+            // 变更状态
+            cartInfo.setIsChecked(isChecked);
+            // 将变更之后的数据放入缓存
+            redisTemplate.opsForHash().put(cartKey, skuId.toString(), cartInfo);
+            // 可以考虑是否需要重新设置过期时间
+            this.setCartKeyExpire(cartKey);
+        }
+    }
+
+    /**
+     * 删除临时购物车
+     *
+     * @param userTempId userTempId
+     */
+    private void deleteCartList(String userTempId) {
+        // 删除数据库
+        // cartInfoMapper.delete(new LambdaQueryWrapper<CartInfo>()
+        // .eq(CartInfo::getUserId, userTempId));
+        cartAsyncService.delCartInfo(userTempId);
+
+        // 删除 Redis
+        String cartKey = this.getCartKey(userTempId);
+        if (redisTemplate.hasKey(cartKey)) {
+            redisTemplate.delete(cartKey);
+        }
+    }
+
+    /**
+     * 合并购物车
+     *
+     * @param cartInfoNoLoginList cartInfoNoLoginList
+     * @param userId              userId
+     * @return List<CartInfo>
+     */
+    private List<CartInfo> mergeToCartList(List<CartInfo> cartInfoNoLoginList, String userId) {
+        /*
+         * 1. 根据用户Id获取登陆用户集合数据
+         * 2. 做合并处理 skuId相同 数量相加
+         * demo1:
+            登录：
+                37 1
+                38 1
+            未登录：
+                37 1
+                38 1
+                39 1
+            合并之后的数据
+                37 2
+                38 2
+                39 1
+
+                第一件：相同的做update
+                第二件：没有相同insert
+                最后一件事：将最终的合并结果查询并返回！
+                *
+         */
+        List<CartInfo> cartInfoLoginList = this.getCartList(userId);
+        //  第一种方案：双重for 遍历：根据skuId 是否相同！
+        //  第二种方案：使用map做包含 cartInfoLoginList 变成map 集合 key = skuId ,value = CartInfo
+        Map<Long, CartInfo> longCartInfoMap = cartInfoLoginList.stream().collect(
+                Collectors.toMap(CartInfo::getSkuId, cartInfo -> cartInfo));
+        // 遍历临时购物车数据
+        for (CartInfo cartInfo : cartInfoNoLoginList) {
+            // 未登陆的SkuId
+            Long skuId = cartInfo.getSkuId();
+            if (longCartInfoMap.containsKey(skuId)) {
+                // 包含 更新 数量相加 登陆和未登陆
+                CartInfo cartLogInfo = longCartInfoMap.get(skuId);
+                cartLogInfo.setSkuNum(cartLogInfo.getSkuNum() + cartInfo.getSkuNum());
+                cartLogInfo.setUpdateTime(new Timestamp(System.currentTimeMillis()));
+                // 判断购物车商品是否选中状态为基准 再在数据库里面进行变更 如果未登陆是0 登陆是1的话 那么还是1 反正总的原则就是要多选中
+                if (cartInfo.getIsChecked() == 1) {
+                    cartLogInfo.setIsChecked(1);
+                }
+                cartInfoMapper.updateById(cartLogInfo);
+            } else {
+                // 不包含 插入
+                cartInfo.setUserId(userId);
+                cartInfo.setCreateTime(new Timestamp(System.currentTimeMillis()));
+                cartInfo.setUpdateTime(new Timestamp(System.currentTimeMillis()));
+                // 使用异步的话 后执行 容易出现数据库和缓存数据不一致的问题 ！建议同步！建议设置 redis 没有过期时间！
+                cartInfoMapper.insert(cartInfo);
+            }
+        }
+        // 查询并放入缓存
+        List<CartInfo> cartInfoList = loadCartCache(userId);
         return cartInfoList;
     }
 
