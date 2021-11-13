@@ -52,4 +52,12 @@ public class CartAsyncServiceImpl implements CartAsyncService {
         // .set("is_check", isChecked)
         // updateWrapper 里面有 set 直接给字段名 和 字段值就可以了
     }
+
+    @Override
+    @Async
+    public void deleteCart(Long skuId, String userId) {
+        cartInfoMapper.delete(new LambdaQueryWrapper<CartInfo>()
+                .eq(CartInfo::getUserId, userId)
+                .eq(CartInfo::getSkuId, skuId));
+    }
 }

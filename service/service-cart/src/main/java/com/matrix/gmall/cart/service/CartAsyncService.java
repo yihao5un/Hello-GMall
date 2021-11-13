@@ -34,4 +34,12 @@ public interface CartAsyncService {
      * @param skuId skuId
      */
     void checkCart(String userId, Integer isChecked, Long skuId);
+
+    /**
+     * 删除购物车
+     *
+     * @param skuId skuId
+     * @param userId userId
+     */
+    void deleteCart(Long skuId, String userId);
 }

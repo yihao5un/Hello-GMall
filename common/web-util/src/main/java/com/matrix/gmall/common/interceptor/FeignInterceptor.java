@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
  */
 @Component
 public class FeignInterceptor implements RequestInterceptor {
+    @Override
     public void apply(RequestTemplate requestTemplate) {
         //  微服务远程调用使用feign ，feign 传递数据的时候，没有。
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();

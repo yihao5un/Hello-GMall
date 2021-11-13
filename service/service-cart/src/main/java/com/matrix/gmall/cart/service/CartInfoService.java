@@ -34,4 +34,13 @@ public interface CartInfoService {
      * @param skuId skuId
      */
     void checkCart(String userId, Integer isChecked, Long skuId);
+
+    /**
+     * 删除购物项
+     *
+     * 注意: 不能用skuId进行删除 因为不知道是哪个用户的商品Id
+     * @param skuId skuId
+     * @param userId userId
+     */
+    void deleteCart(Long skuId, String userId);
 }

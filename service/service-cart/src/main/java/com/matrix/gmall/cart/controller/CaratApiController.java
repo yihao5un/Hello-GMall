@@ -6,10 +6,7 @@ import com.matrix.gmall.common.util.AuthContextHolder;
 import com.matrix.gmall.model.cart.CartInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -24,7 +21,7 @@ public class CaratApiController {
     @Autowired
     private CartInfoService cartInfoService;
 
-    @GetMapping("addToCart/{skuId}/{skuNum}")
+    @PostMapping("addToCart/{skuId}/{skuNum}")
     public Result addToCart(@PathVariable Long skuId,
                             @PathVariable Integer skuNum,
                             HttpServletRequest request) {
@@ -49,5 +46,27 @@ public class CaratApiController {
         String userTempId = AuthContextHolder.getUserTempId(request);
         List<CartInfo> cartList = cartInfoService.getCartList(userId, userTempId);
         return Result.ok(cartList);
+    }
+
+    @GetMapping("checkCart/{skuId}/{isChecked}")
+    public Result<String> checkCart(@PathVariable Long skuId,
+                                    @PathVariable Integer isChecked, HttpServletRequest request) {
+        String userId = AuthContextHolder.getUserId(request);
+        if (StringUtils.isEmpty(userId)) {
+            userId = AuthContextHolder.getUserTempId(request);
+        }
+        cartInfoService.checkCart(userId, isChecked, skuId);
+        return Result.ok();
+    }
+
+    @DeleteMapping("deleteCart/{skuId}")
+    public Result<String> deleteCart(@PathVariable("skuId") Long skuId,
+                                     HttpServletRequest request) {
+        String userId = AuthContextHolder.getUserId(request);
+        if (StringUtils.isEmpty(userId)) {
+            userId = AuthContextHolder.getUserTempId(request);
+        }
+        cartInfoService.deleteCart(skuId, userId);
+        return Result.ok();
     }
 }

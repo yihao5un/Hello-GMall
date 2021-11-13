@@ -1,7 +1,5 @@
 package com.matrix.gmall.common.util;
 
-//import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-
 import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -14,8 +12,8 @@ public class AuthContextHolder {
 
     /**
      * 获取当前登录用户id
-     * @param request
-     * @return
+     * @param request request
+     * @return String
      */
     public static String getUserId(HttpServletRequest request) {
         String userId = request.getHeader("userId");
@@ -24,8 +22,8 @@ public class AuthContextHolder {
 
     /**
      * 获取当前未登录临时用户id
-     * @param request
-     * @return
+     * @param request request
+     * @return String
      */
     public static String getUserTempId(HttpServletRequest request) {
         String userTempId = request.getHeader("userTempId");

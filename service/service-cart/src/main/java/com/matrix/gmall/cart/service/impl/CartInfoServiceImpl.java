@@ -79,6 +79,8 @@ public class CartInfoServiceImpl implements CartInfoService {
                 cartInfoExit.setSkuPrice(productFeignClient.getSkuPrice(skuId));
                 // 更新时间
                 cartInfoExit.setUpdateTime(new Timestamp(System.currentTimeMillis()));
+                // 再次选中
+                cartInfoExit.setIsChecked(1);
                 // 执行更新语句
                 // cartInfoMapper.updateById(cartInfoExit);
                 cartAsyncService.updateCartInfo(cartInfoExit);
@@ -184,6 +186,17 @@ public class CartInfoServiceImpl implements CartInfoService {
             redisTemplate.opsForHash().put(cartKey, skuId.toString(), cartInfo);
             // 可以考虑是否需要重新设置过期时间
             this.setCartKeyExpire(cartKey);
+        }
+    }
+
+    @Override
+    public void deleteCart(Long skuId, String userId) {
+        // 数据库
+        cartAsyncService.deleteCart(skuId, userId);
+        // 缓存
+        String cartKey = this.getCartKey(userId);
+        if (redisTemplate.boundHashOps(cartKey).hasKey(skuId.toString())) {
+            redisTemplate.boundHashOps(cartKey).delete(skuId.toString());
         }
     }
 
