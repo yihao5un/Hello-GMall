@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import sun.jvm.hotspot.ui.tree.SimpleTreeGroupNode;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -35,5 +36,11 @@ public class CartController {
         request.setAttribute("skuInfo", skuInfo);
         request.setAttribute("skuNum", skuNum);
         return "cart/addCart";
+    }
+
+    @GetMapping("cart.html")
+    public String cartPage() {
+        // 返回购物车列表页面
+        return "cart/index";
     }
 }
