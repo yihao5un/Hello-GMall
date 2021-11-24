@@ -19,6 +19,7 @@ import org.springframework.util.StringUtils;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -199,6 +200,19 @@ public class CartInfoServiceImpl implements CartInfoService {
             redisTemplate.boundHashOps(cartKey).delete(skuId.toString());
         }
     }
+
+    @Override
+    public List<CartInfo> getCartCheckedList(String userId) {
+        // 直接从缓存中获取数据就可以 因为页面上的数据就是从缓存中拿到的(不考虑缓存过期的情况)
+        String cartKey = this.getCartKey(userId);
+        List<CartInfo> cartInfoList = redisTemplate.boundHashOps(cartKey).values();
+        // 判断选中
+        assert cartInfoList != null;
+        return cartInfoList.stream()
+                .filter(cartInfo -> cartInfo.getIsChecked() == 1)
+                .collect(Collectors.toList());
+    }
+
 
     /**
      * 删除临时购物车

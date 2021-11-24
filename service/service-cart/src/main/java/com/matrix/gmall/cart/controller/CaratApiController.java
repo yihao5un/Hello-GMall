@@ -60,13 +60,17 @@ public class CaratApiController {
     }
 
     @DeleteMapping("deleteCart/{skuId}")
-    public Result<String> deleteCart(@PathVariable("skuId") Long skuId,
-                                     HttpServletRequest request) {
+    public Result<String> deleteCart(@PathVariable("skuId") Long skuId, HttpServletRequest request) {
         String userId = AuthContextHolder.getUserId(request);
         if (StringUtils.isEmpty(userId)) {
             userId = AuthContextHolder.getUserTempId(request);
         }
         cartInfoService.deleteCart(skuId, userId);
         return Result.ok();
+    }
+
+    @GetMapping("getCartCheckedList/{userId}")
+    public List<CartInfo> getCartCheckedList(@PathVariable(value = "userId") String userId) {
+        return cartInfoService.getCartCheckedList(userId);
     }
 }
