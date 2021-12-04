@@ -23,7 +23,7 @@ public interface UserFeignClient {
      * @return List<UserAddress> List<UserAddress>
      */
     @GetMapping("/api/user/inner/findUserAddressListByUserId/{userId}")
-    List<UserAddress> findUserAddressListByUserId(@PathVariable Long userId);
+    List<UserAddress> findUserAddressListByUserId(@PathVariable String userId);
 
     /**
      * 根据用户Id查询购物车列表

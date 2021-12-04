@@ -21,7 +21,7 @@ public class UserApiController {
     private UserAddressService userAddressService;
 
     @GetMapping("inner/findUserAddressListByUserId/{userId}")
-    public List<UserAddress> findUserAddressListByUserId(@PathVariable Long userId) {
+    public List<UserAddress> findUserAddressListByUserId(@PathVariable String userId) {
         return userAddressService.findUserAddressListByUserId(userId);
     }
 }

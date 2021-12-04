@@ -14,7 +14,7 @@ import java.util.List;
 @Component
 public class UserDegradeFeignClient implements UserFeignClient {
     @Override
-    public List<UserAddress> findUserAddressListByUserId(Long userId) {
+    public List<UserAddress> findUserAddressListByUserId(String userId) {
         return null;
     }
 

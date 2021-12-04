@@ -4,10 +4,8 @@ import com.matrix.gmall.cart.client.CartFeignClient;
 import com.matrix.gmall.model.product.SkuInfo;
 import com.matrix.gmall.product.client.ProductFeignClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import sun.jvm.hotspot.ui.tree.SimpleTreeGroupNode;
 
 import javax.servlet.http.HttpServletRequest;
 

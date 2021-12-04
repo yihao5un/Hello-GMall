@@ -32,6 +32,11 @@
             <artifactId>service-cart-client</artifactId>
             <version>1.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.matrix.gmall</groupId>
+            <artifactId>service-order-client</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
 
     <build>

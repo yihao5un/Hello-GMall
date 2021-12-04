@@ -140,7 +140,7 @@ public class OrderInfo extends BaseEntity {
         if(null != this.getActivityReduceAmount()) {
             totalAmount = totalAmount.subtract(this.getActivityReduceAmount());
         }
-        //  计算最后 10*2=20
+        //  计算最后 10*2=20 BigDecimal 用multiply这个方法去存数据
         for (OrderDetail orderDetail : orderDetailList) {
             BigDecimal skuTotalAmount = orderDetail.getOrderPrice().multiply(new BigDecimal(orderDetail.getSkuNum()));
             originalTotalAmount = originalTotalAmount.add(skuTotalAmount);

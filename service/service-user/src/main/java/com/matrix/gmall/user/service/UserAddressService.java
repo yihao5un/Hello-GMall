@@ -15,5 +15,5 @@ public interface UserAddressService {
      * @param userId userId
      * @return List<UserAddress> List<UserAddress>
      */
-    List<UserAddress> findUserAddressListByUserId(Long userId);
+    List<UserAddress> findUserAddressListByUserId(String userId);
 }

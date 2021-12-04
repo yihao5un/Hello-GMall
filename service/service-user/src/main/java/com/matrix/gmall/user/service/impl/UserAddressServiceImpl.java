@@ -19,8 +19,8 @@ public class UserAddressServiceImpl implements UserAddressService {
     private UserAddressMapper userAddressMapper;
 
     @Override
-    public List<UserAddress> findUserAddressListByUserId(Long userId) {
+    public List<UserAddress> findUserAddressListByUserId(String userId) {
         return userAddressMapper.selectList(new LambdaQueryWrapper<UserAddress>()
-                .eq(UserAddress::getUserId, userId));
+                .eq(UserAddress::getUserId, Long.parseLong(userId)));
     }
 }
