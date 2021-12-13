@@ -7,11 +7,10 @@ import com.matrix.gmall.model.cart.CartInfo;
 import com.matrix.gmall.model.order.OrderDetail;
 import com.matrix.gmall.model.order.OrderInfo;
 import com.matrix.gmall.model.user.UserAddress;
+import com.matrix.gmall.order.service.OrderService;
 import com.matrix.gmall.user.client.UserFeignClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -30,6 +29,9 @@ public class OrderApiController {
 
     @Autowired
     private CartFeignClient cartFeignClient;
+
+    @Autowired
+    private OrderService orderService;
 
     /**
      * 确认订单 (带有auth的必须进行登陆)
@@ -64,5 +66,20 @@ public class OrderApiController {
         map.put("detailArrayList", detailArrayList);
         map.put("userAddressList", userAddressList);
         return Result.ok(map);
+    }
+
+    /**
+     * 保存订单的控制器
+     * 前端页面传递的是Json 数据 ，后台使用@RequestBody接收
+     *
+     * @param orderInfo orderInfo
+     * @return orderId
+     */
+    @PostMapping("auth/submitOrder")
+    public Result submitOrder(@RequestBody OrderInfo orderInfo, HttpServletRequest request) {
+        String userId = AuthContextHolder.getUserId(request);
+        orderInfo.setUserId(Long.parseLong(userId));
+        Long orderId = orderService.saveOrderInfo(orderInfo);
+        return Result.ok(orderId);
     }
 }
