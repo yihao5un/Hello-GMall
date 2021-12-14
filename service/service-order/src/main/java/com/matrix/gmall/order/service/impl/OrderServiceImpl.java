@@ -1,5 +1,6 @@
 package com.matrix.gmall.order.service.impl;
 
+import com.matrix.gmall.common.util.HttpClientUtil;
 import com.matrix.gmall.model.enums.OrderStatus;
 import com.matrix.gmall.model.enums.ProcessStatus;
 import com.matrix.gmall.model.order.OrderDetail;
@@ -8,6 +9,7 @@ import com.matrix.gmall.order.mapper.OrderDetailMapper;
 import com.matrix.gmall.order.mapper.OrderInfoMapper;
 import com.matrix.gmall.order.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Value("${ware.url}")
+    private String wareUrl;
 
     /**
      * 加事务注解 因为是多表的
@@ -87,5 +92,13 @@ public class OrderServiceImpl implements OrderService {
     public void deleteTradeNo(String userId) {
         String tradeNoKey = "user" + userId + ":tradeCode";
         redisTemplate.delete(tradeNoKey);
+    }
+
+    @Override
+    public boolean checkStock(Long skuId, Integer skuNum) {
+        // 远程调用库存
+        String result = HttpClientUtil.doGet(wareUrl + "/hasStock?skuId=" + skuId + "&num" + skuNum);
+        // 0:没有库存 1:有库存
+        return "1".equals(result);
     }
 }

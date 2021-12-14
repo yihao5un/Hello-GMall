@@ -51,4 +51,12 @@ public interface CartInfoService {
      * @return List<CartInfo> List<CartInfo>
      */
     List<CartInfo> getCartCheckedList(String userId);
+
+    /**
+     * 根据 userId 查询购物车最新数据
+     *
+     * @param userId userId
+     * @return List<CartInfo>
+     */
+    List<CartInfo> loadCartCache(String userId);
 }

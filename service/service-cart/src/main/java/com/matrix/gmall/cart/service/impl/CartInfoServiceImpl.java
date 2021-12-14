@@ -323,7 +323,8 @@ public class CartInfoServiceImpl implements CartInfoService {
      *
      * @param userId userId
      */
-    private List<CartInfo> loadCartCache(String userId) {
+    @Override
+    public List<CartInfo> loadCartCache(String userId) {
         List<CartInfo> cartInfoList = cartInfoMapper.selectList(
                 new LambdaQueryWrapper<CartInfo>()
                         .eq(CartInfo::getUserId, userId)

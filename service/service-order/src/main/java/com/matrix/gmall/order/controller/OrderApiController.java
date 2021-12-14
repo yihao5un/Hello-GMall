@@ -8,11 +8,13 @@ import com.matrix.gmall.model.order.OrderDetail;
 import com.matrix.gmall.model.order.OrderInfo;
 import com.matrix.gmall.model.user.UserAddress;
 import com.matrix.gmall.order.service.OrderService;
+import com.matrix.gmall.product.client.ProductFeignClient;
 import com.matrix.gmall.user.client.UserFeignClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
 import java.util.*;
 
 /**
@@ -32,6 +34,9 @@ public class OrderApiController {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private ProductFeignClient productFeignClient;
 
     /**
      * 确认订单 (带有auth的必须进行登陆)
@@ -65,6 +70,8 @@ public class OrderApiController {
         map.put("totalNum", detailArrayList.size());
         map.put("detailArrayList", detailArrayList);
         map.put("userAddressList", userAddressList);
+        String tradeNo = orderService.getTradeNo(userId);
+        map.put("tradeNo", tradeNo);
         return Result.ok(map);
     }
 
@@ -78,6 +85,29 @@ public class OrderApiController {
     @PostMapping("auth/submitOrder")
     public Result submitOrder(@RequestBody OrderInfo orderInfo, HttpServletRequest request) {
         String userId = AuthContextHolder.getUserId(request);
+        String tradeNo = request.getParameter("tradeNo");
+        Boolean result = orderService.checkTradeNo(tradeNo, userId);
+        if (Boolean.FALSE.equals(result)) {
+            // 比较失败
+            return Result.fail().message("不能无刷新回退提交订单");
+        }
+        orderService.deleteTradeNo(userId);
+        // 远程调用
+        List<OrderDetail> orderDetailList = orderInfo.getOrderDetailList();
+        for (OrderDetail orderDetail : orderDetailList) {
+            boolean flag = orderService.checkStock(orderDetail.getSkuId(), orderDetail.getSkuNum());
+            if (!flag) {
+                return Result.fail().message(orderDetail.getSkuName() + "库存不足");
+            }
+            // 比较订单价格与实时价格
+            BigDecimal orderPrice = orderDetail.getOrderPrice();
+            BigDecimal skuPrice = productFeignClient.getSkuPrice(orderDetail.getSkuId());
+            if (orderPrice.compareTo(skuPrice) != 0) {
+                // 价格有变动设置最新的价格
+                cartFeignClient.loadCartCache(userId);
+                return Result.fail().message(orderDetail.getSkuName() + "价格有变动");
+            }
+        }
         orderInfo.setUserId(Long.parseLong(userId));
         Long orderId = orderService.saveOrderInfo(orderInfo);
         return Result.ok(orderId);
