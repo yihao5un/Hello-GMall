@@ -10,12 +10,16 @@ import com.matrix.gmall.model.user.UserAddress;
 import com.matrix.gmall.order.service.OrderService;
 import com.matrix.gmall.product.client.ProductFeignClient;
 import com.matrix.gmall.user.client.UserFeignClient;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * 这是一个远程调用的地址 供web-all使用的
@@ -37,6 +41,9 @@ public class OrderApiController {
 
     @Autowired
     private ProductFeignClient productFeignClient;
+
+    @Autowired
+    private ThreadPoolExecutor threadPoolExecutor;
 
     /**
      * 确认订单 (带有auth的必须进行登陆)
@@ -92,22 +99,63 @@ public class OrderApiController {
             return Result.fail().message("不能无刷新回退提交订单");
         }
         orderService.deleteTradeNo(userId);
+
+        // 可以使用多线程
+        List<CompletableFuture> futureList = new ArrayList<>();
+        // 存储错误信息集合
+        List<String> errorList = new ArrayList<>();
         // 远程调用
         List<OrderDetail> orderDetailList = orderInfo.getOrderDetailList();
+
         for (OrderDetail orderDetail : orderDetailList) {
-            boolean flag = orderService.checkStock(orderDetail.getSkuId(), orderDetail.getSkuNum());
-            if (!flag) {
-                return Result.fail().message(orderDetail.getSkuName() + "库存不足");
-            }
-            // 比较订单价格与实时价格
+            //1. 开线程 CompletableFuture runAsync无返回
+            CompletableFuture<Void> stockCompletableFuture = CompletableFuture.runAsync(() -> {
+                boolean flag = orderService.checkStock(orderDetail.getSkuId(), orderDetail.getSkuNum());
+                if (!flag) {
+//                    return Result.fail().message(orderDetail.getSkuName() + "库存不足");
+                    errorList.add(orderDetail.getSkuName() + "库存不足");
+                }
+            }, threadPoolExecutor);
+            // 添加到异步编排集合
+            futureList.add(stockCompletableFuture);
+
+            //2. 开线程 CompletableFuture runAsync无返回
+            CompletableFuture<Void> priceCompletableFuture = CompletableFuture.runAsync(() -> {
             BigDecimal orderPrice = orderDetail.getOrderPrice();
             BigDecimal skuPrice = productFeignClient.getSkuPrice(orderDetail.getSkuId());
             if (orderPrice.compareTo(skuPrice) != 0) {
                 // 价格有变动设置最新的价格
                 cartFeignClient.loadCartCache(userId);
-                return Result.fail().message(orderDetail.getSkuName() + "价格有变动");
-            }
+//                return Result.fail().message(orderDetail.getSkuName() + "价格有变动");
+                errorList.add(orderDetail.getSkuName() + "价格有变动");
+            }}, threadPoolExecutor);
+            // 添加到异步编排集合
+            futureList.add(priceCompletableFuture);
         }
+
+        // 所有数据结果: errorList futureList 执行异步编排的集合
+        // 多任务组合
+        CompletableFuture.allOf(futureList.toArray(new CompletableFuture[futureList.size()])).join();
+        // 判断errorList中是否有数据 如果有数据 不可以跑了
+        if (CollectionUtils.isEmpty(errorList)) {
+            return Result.fail().message(StringUtils.join(errorList, ","));
+        }
+
+//        for (OrderDetail orderDetail : orderDetailList) {
+//            boolean flag = orderService.checkStock(orderDetail.getSkuId(), orderDetail.getSkuNum());
+//            if (!flag) {
+//                return Result.fail().message(orderDetail.getSkuName() + "库存不足");
+//            }
+//            // 比较订单价格与实时价格
+//            BigDecimal orderPrice = orderDetail.getOrderPrice();
+//            BigDecimal skuPrice = productFeignClient.getSkuPrice(orderDetail.getSkuId());
+//            if (orderPrice.compareTo(skuPrice) != 0) {
+//                // 价格有变动设置最新的价格
+//                cartFeignClient.loadCartCache(userId);
+//                return Result.fail().message(orderDetail.getSkuName() + "价格有变动");
+//            }
+//        }
+
         orderInfo.setUserId(Long.parseLong(userId));
         Long orderId = orderService.saveOrderInfo(orderInfo);
         return Result.ok(orderId);
