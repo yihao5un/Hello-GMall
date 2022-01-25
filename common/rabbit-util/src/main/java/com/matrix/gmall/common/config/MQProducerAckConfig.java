@@ -6,6 +6,8 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
 /**
+ * RabbitMq 消息配置类
+ *
  * @Author: yihaosun
  * @Date: 2021/12/21 20:56
  */
@@ -15,8 +17,8 @@ public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback, Rabb
      * 消息成功发送到交换机上
      *
      * @param correlationData 消息的载体 带有Id标示的
-     * @param ack
-     * @param cause
+     * @param ack ack
+     * @param cause cause
      */
     @Override
     public void confirm(CorrelationData correlationData, boolean ack, String cause) {
@@ -29,14 +31,20 @@ public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback, Rabb
     }
 
     /**
-     * @param message
-     * @param i
-     * @param s
-     * @param s1
-     * @param s2
+     * 消息如果没有成功发送到队列则执行当前这个方法
+     * @param message message
+     * @param replyCode replyCode
+     * @param replyText replyText
+     * @param exchange exchange
+     * @param routingKey routingKey
      */
     @Override
-    public void returnedMessage(Message message, int i, String s, String s1, String s2) {
-
+    public void returnedMessage(Message message, int replyCode, String replyText, String exchange, String routingKey) {
+        // 反序列化对象输出
+        System.out.println("消息主体: " + new String(message.getBody()));
+        System.out.println("应答码: " + replyCode);
+        System.out.println("描述：" + replyText);
+        System.out.println("消息使用的交换器 exchange : " + exchange);
+        System.out.println("消息使用的路由键 routing : " + routingKey);
     }
 }

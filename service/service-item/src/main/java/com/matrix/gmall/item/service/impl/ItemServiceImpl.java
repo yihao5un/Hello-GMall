@@ -33,7 +33,7 @@ public class ItemServiceImpl implements ItemService {
     private ProductFeignClient productFeignClient;
 
     /**
-     * ThreadPoolExecutor 会使用到这个配置 FThreadPoolConfig
+     * ThreadPoolExecutor 会使用到这个配置 ThreadPoolConfig
      */
     @Autowired
     private ThreadPoolExecutor threadPoolExecutor;
