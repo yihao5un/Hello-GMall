@@ -27,11 +27,18 @@ public class ConfirmReceiver {
             key = {"routing.confirm"}
     ))
     public void getMsg(String msg, Message message, Channel channel) throws IOException {
-        System.out.println("接收到的消息: \t" + new String(message.getBody()));
-        System.out.println("接收到的消息: \t" + msg);
-        // 手动确认 ACK
-        long deliveryTag = message.getMessageProperties().getDeliveryTag();
-        // false 表示一个一个确认 true 表示批量确认
-        channel.basicAck(deliveryTag, true);
+        try {
+            System.out.println("接收到的消息: \t" + new String(message.getBody()));
+            System.out.println("接收到的消息: \t" + msg);
+            // 手动确认 ACK
+            long deliveryTag = message.getMessageProperties().getDeliveryTag();
+            // false 表示一个一个确认 true 表示批量确认
+            channel.basicAck(deliveryTag, true);
+        } catch (IOException e) {
+            e.printStackTrace();
+            // 消息消费异常 注意是nack
+            // 第三个参数 是否重回队列
+            channel.basicNack(message.getMessageProperties().getDeliveryTag(), false,false);
+        }
     }
 }
