@@ -6,7 +6,9 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.matrix.gmall.common.cache.GmallCache;
+import com.matrix.gmall.common.constant.MqConst;
 import com.matrix.gmall.common.constant.RedisConst;
+import com.matrix.gmall.common.service.RabbitService;
 import com.matrix.gmall.model.product.*;
 import com.matrix.gmall.product.mapper.*;
 import com.matrix.gmall.product.service.ManageService;
@@ -87,6 +89,9 @@ public class ManageServiceImpl implements ManageService {
 
     @Autowired
     private BaseTradeMarkMapper baseTradeMarkMapper;
+
+     @Autowired
+     private RabbitService rabbitService;
 
     @Override
     public List<BaseCategory1> getBaseCategory1() {
@@ -274,6 +279,11 @@ public class ManageServiceImpl implements ManageService {
         skuInfo.setId(skuId);
         skuInfo.setIsSale(1);
         skuInfoMapper.updateById(skuInfo);
+        // 发送消息 在商品检索的地方消费
+        // 发送消息的主体: skuId
+        // 同一个交换机 routingKey不同 绑定的队列不同
+        rabbitService.sendMessage(MqConst.EXCHANGE_DIRECT_GOODS,
+                MqConst.ROUTING_GOODS_UPPER, skuId);
     }
 
     @Override
@@ -283,6 +293,12 @@ public class ManageServiceImpl implements ManageService {
         skuInfo.setId(skuId);
         skuInfo.setIsSale(0);
         skuInfoMapper.updateById(skuInfo);
+
+        // 发送消息 在商品检索的地方消费
+        // 发送消息的主体: skuId
+        // 同一个交换机 routingKey不同 绑定的队列不同
+        rabbitService.sendMessage(MqConst.EXCHANGE_DIRECT_GOODS,
+                MqConst.ROUTING_GOODS_LOWER, skuId);
     }
 
     /**

@@ -3,7 +3,10 @@ package com.matrix.gmall.common.config;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
 
 /**
  * RabbitMq 消息配置类
@@ -13,6 +16,20 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback, RabbitTemplate.ReturnCallback {
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    /**
+     * 修饰一个非静态的void()方法,在服务器加载Servlet的时候运行并且只会被服务器执行一次
+     * 在构造函数之后，init()方法之前执行。
+     * 为了让当前这个类和rabbitTemplate关联上 注意这是一个坑！！！
+     */
+    @PostConstruct
+    public void init() {
+        rabbitTemplate.setConfirmCallback(this);
+        rabbitTemplate.setReturnCallback(this);
+    }
+
     /**
      * 消息成功发送到交换机上
      *
