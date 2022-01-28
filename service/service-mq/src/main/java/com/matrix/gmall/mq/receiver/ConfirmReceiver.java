@@ -1,5 +1,6 @@
 package com.matrix.gmall.mq.receiver;
 
+import com.matrix.gmall.mq.config.DeadLetterMqConfig;
 import com.rabbitmq.client.Channel;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.Exchange;
@@ -9,6 +10,8 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * 监听消息消费
@@ -40,5 +43,15 @@ public class ConfirmReceiver {
             // 第三个参数 是否重回队列
             channel.basicNack(message.getMessageProperties().getDeliveryTag(), false,false);
         }
+    }
+
+    @RabbitListener(
+            // 已经设置好了绑定关系 直接消费即可
+            queues = DeadLetterMqConfig.QUEUE_DEAD_2)
+    public void getDeadMsg(String msg, Message message, Channel channel) throws IOException {
+        // 当前的时间
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        System.out.println("接收到的消息: " + msg + "时间: \t" + simpleDateFormat.format(new Date()));
+        channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
     }
 }
