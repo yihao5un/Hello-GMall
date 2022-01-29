@@ -76,7 +76,7 @@ public class DeadLetterMqConfig {
      */
     @Bean
     public Binding binding2() {
-        // 正常情况下的绑定
+        // 死信情况下的绑定
         return BindingBuilder.bind(queue2()).to(exchange()).with(ROUTING_DEAD_2);
     }
 }

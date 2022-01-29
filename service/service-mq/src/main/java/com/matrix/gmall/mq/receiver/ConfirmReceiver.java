@@ -1,6 +1,7 @@
 package com.matrix.gmall.mq.receiver;
 
 import com.matrix.gmall.mq.config.DeadLetterMqConfig;
+import com.matrix.gmall.mq.config.DelayedMqConfig;
 import com.rabbitmq.client.Channel;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.Exchange;
@@ -20,6 +21,13 @@ import java.util.Date;
  */
 @Component
 public class ConfirmReceiver {
+    /**
+     * 监听消息
+     *
+     * @param msg msg
+     * @param message message
+     * @param channel channel
+     */
     @RabbitListener(bindings = @QueueBinding(
             // 这个value才是队列的名 在消费端指定
             // 是否持久化durable 和 自动删除autoDelete
@@ -45,10 +53,35 @@ public class ConfirmReceiver {
         }
     }
 
+    /**
+     * 监听延迟队列消息
+     *
+     * @param msg msg
+     * @param message message
+     * @param channel channel
+     */
     @RabbitListener(
             // 已经设置好了绑定关系 直接消费即可
             queues = DeadLetterMqConfig.QUEUE_DEAD_2)
     public void getDeadMsg(String msg, Message message, Channel channel) throws IOException {
+        // 当前的时间
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        System.out.println("接收到的消息: " + msg + "时间: \t" + simpleDateFormat.format(new Date()));
+        channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+    }
+
+    /**
+     * 监听延迟队列消息 - 基于插件的方式
+     * NOTE: 基于插件的会有一个小bug 会走returnedMessage()这个方法(消息如果没有成功发送到队列方法) 但是不影响业务
+     *
+     * @param msg msg
+     * @param message message
+     * @param channel channel
+     */
+    @RabbitListener(
+            // 已经设置好了绑定关系 直接消费即可
+            queues = DelayedMqConfig.QUEUE_DELAY_1)
+    public void getDelayMsg(String msg, Message message, Channel channel) throws IOException {
         // 当前的时间
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         System.out.println("接收到的消息: " + msg + "时间: \t" + simpleDateFormat.format(new Date()));

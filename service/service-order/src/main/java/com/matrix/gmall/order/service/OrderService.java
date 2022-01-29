@@ -1,12 +1,14 @@
 package com.matrix.gmall.order.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.matrix.gmall.model.enums.ProcessStatus;
 import com.matrix.gmall.model.order.OrderInfo;
 
 /**
  * @Author: yihaosun
  * @Date: 2021/12/6 22:28
  */
-public interface OrderService {
+public interface OrderService extends IService<OrderInfo> {
     /**
      * 保存订单
      *
@@ -49,4 +51,17 @@ public interface OrderService {
      * @return boolean
      */
     boolean checkStock(Long skuId, Integer skuNum);
+
+    /**
+     * 修改订单状态
+     * @param orderId orderId
+     */
+    void execExpiredOrder(Long orderId);
+
+    /**
+     * 根据订单Id 更新订单状态，订单进度状态
+     * @param orderId orderId
+     * @param processStatus processStatus
+     */
+    void updateOrderStatus(Long orderId, ProcessStatus processStatus);
 }

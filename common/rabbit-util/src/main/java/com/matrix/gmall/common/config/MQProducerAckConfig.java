@@ -20,9 +20,10 @@ public class MQProducerAckConfig implements RabbitTemplate.ConfirmCallback, Rabb
     private RabbitTemplate rabbitTemplate;
 
     /**
+     * 注意点:!!!
      * 修饰一个非静态的void()方法,在服务器加载Servlet的时候运行并且只会被服务器执行一次
      * 在构造函数之后，init()方法之前执行。
-     * 为了让当前这个类和rabbitTemplate关联上 注意这是一个坑！！！
+     * 为了让当前这个类和rabbitTemplate关联上 注意这是一个坑！
      */
     @PostConstruct
     public void init() {
