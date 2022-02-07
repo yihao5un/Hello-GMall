@@ -20,6 +20,7 @@
         <module>service-cart</module>
         <module>service-order</module>
         <module>service-mq</module>
+        <module>service-payment</module>
     </modules>
 
     <!-- 充当一个父亲工程 -->

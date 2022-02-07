@@ -17,7 +17,7 @@ public interface OrderService extends IService<OrderInfo> {
      */
     Long saveOrderInfo(OrderInfo orderInfo);
 
-    // ============== 以下是做回退之后不让再刷新的功能 ==============//
+    //============== 以下是做回退之后不让再刷新的功能 ==============//
 
     /**
      * 获取交易号
@@ -54,14 +54,26 @@ public interface OrderService extends IService<OrderInfo> {
 
     /**
      * 修改订单状态
+     *
      * @param orderId orderId
      */
     void execExpiredOrder(Long orderId);
 
     /**
      * 根据订单Id 更新订单状态，订单进度状态
+     *
      * @param orderId orderId
      * @param processStatus processStatus
      */
     void updateOrderStatus(Long orderId, ProcessStatus processStatus);
+
+    /**
+     * 根据订单Id 查询订单信息
+     * 要将接口发布到Feign上用于WebAll的整合做页面渲染
+     * 要在控制器中添加接口
+     *
+     * @param orderId orderId
+     * @return OrderInfo
+     */
+    OrderInfo getOrderInfo(Long orderId);
 }

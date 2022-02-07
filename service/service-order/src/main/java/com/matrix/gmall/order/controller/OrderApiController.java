@@ -160,4 +160,9 @@ public class OrderApiController {
         Long orderId = orderService.saveOrderInfo(orderInfo);
         return Result.ok(orderId);
     }
+
+    @GetMapping("inner/getOrderInfo/{orderId}")
+    public OrderInfo getOrderInfo(@PathVariable("orderId") Long orderId) {
+        return orderService.getOrderInfo(orderId);
+    }
 }

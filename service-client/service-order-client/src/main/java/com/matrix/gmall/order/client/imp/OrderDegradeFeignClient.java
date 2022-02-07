@@ -1,6 +1,7 @@
 package com.matrix.gmall.order.client.imp;
 
 import com.matrix.gmall.common.result.Result;
+import com.matrix.gmall.model.order.OrderInfo;
 import com.matrix.gmall.order.client.OrderFeignClient;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,11 @@ import java.util.Map;
 public class OrderDegradeFeignClient implements OrderFeignClient {
     @Override
     public Result<Map<String, Object>> trade() {
+        return null;
+    }
+
+    @Override
+    public OrderInfo getOrderInfo(Long orderId) {
         return null;
     }
 }

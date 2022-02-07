@@ -1,5 +1,6 @@
 package com.matrix.gmall.order.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.matrix.gmall.common.constant.MqConst;
 import com.matrix.gmall.common.service.RabbitService;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 
@@ -132,5 +134,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo> im
         orderInfo.setOrderStatus(processStatus.getOrderStatus().name());
         orderInfo.setProcessStatus(processStatus.name());
         orderInfoMapper.updateById(orderInfo);
+    }
+
+    @Override
+    public OrderInfo getOrderInfo(Long orderId) {
+        OrderInfo orderInfo = orderInfoMapper.selectById(orderId);
+        // TODO 后续可能会用到订单明细 因此不用IService的getById()
+        List<OrderDetail> orderDetails = orderDetailMapper.selectList(new LambdaQueryWrapper<OrderDetail>().eq(OrderDetail::getOrderId, orderId));
+        if (!CollectionUtils.isEmpty(orderDetails)) {
+            orderInfo.setOrderDetailList(orderDetails);
+        }
+        return orderInfo;
     }
 }

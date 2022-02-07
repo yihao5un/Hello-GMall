@@ -127,17 +127,17 @@ public class OrderInfo extends BaseEntity {
     private CouponInfo couponInfo;
 
     // 计算总价格
-    public void sumTotalAmount(){
+    public void sumTotalAmount() {
         BigDecimal totalAmount = new BigDecimal("0");
         BigDecimal originalTotalAmount = new BigDecimal("0");
         BigDecimal couponAmount = new BigDecimal("0");
         //  减去优惠劵
-        if(null != couponInfo) {
+        if (null != couponInfo) {
             couponAmount = couponAmount.add(couponInfo.getReduceAmount());
             totalAmount = totalAmount.subtract(couponInfo.getReduceAmount());
         }
         //  减去活动
-        if(null != this.getActivityReduceAmount()) {
+        if (null != this.getActivityReduceAmount()) {
             totalAmount = totalAmount.subtract(this.getActivityReduceAmount());
         }
         //  计算最后 10*2=20 BigDecimal 用multiply这个方法去存数据
@@ -150,5 +150,4 @@ public class OrderInfo extends BaseEntity {
         this.setOriginalTotalAmount(originalTotalAmount);
         this.setCouponAmount(couponAmount);
     }
-
 }

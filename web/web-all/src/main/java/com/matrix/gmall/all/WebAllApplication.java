@@ -10,6 +10,7 @@ import org.springframework.context.annotation.ComponentScan;
 /**
  * web-all
  * 在配置类中没有配置数据库 所以要取消数据源自动配置
+ *
  * @Author: yihaosun
  * @Date: 2021/9/22 21:48
  */
