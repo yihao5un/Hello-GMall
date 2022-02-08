@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.Map;
 
 /**
  * @author yihaosun
@@ -27,10 +28,8 @@ public class PaymentServiceImpl implements PaymentService {
         queryWrapper.eq(PaymentInfo::getOrderId, orderInfo.getId());
         queryWrapper.eq(PaymentInfo::getPaymentType, paymentType);
         Integer count = paymentInfoMapper.selectCount(queryWrapper);
-
         // 如果有记录直接返回即可
         if (0 != count) { return; }
-
         // 保存交易记录
         PaymentInfo paymentInfo = new PaymentInfo();
         paymentInfo.setCreateTime(new Date());
@@ -40,7 +39,33 @@ public class PaymentServiceImpl implements PaymentService {
         paymentInfo.setPaymentStatus(PaymentStatus.UNPAID.name());
         paymentInfo.setSubject(orderInfo.getTradeBody());
         paymentInfo.setTotalAmount(orderInfo.getTotalAmount());
-
         paymentInfoMapper.insert(paymentInfo);
+    }
+
+    @Override
+    public PaymentInfo getPaymentInfo(String outTradeNo, String name) {
+        return paymentInfoMapper.selectOne(new LambdaQueryWrapper<PaymentInfo>()
+                .eq(PaymentInfo::getOutTradeNo, outTradeNo)
+                .eq(PaymentInfo::getPaymentType, name));
+    }
+
+    @Override
+    public void paySuccess(String outTradeNo, String name, Map<String, String> paramMap) {
+        PaymentInfo paymentInfo = new PaymentInfo();
+        paymentInfo.setTradeNo(paramMap.get("trade_no"));
+        paymentInfo.setPaymentStatus(PaymentStatus.PAID.name());
+        paymentInfo.setCallbackTime(new Date());
+        paymentInfo.setCallbackContent(paramMap.toString());
+        paymentInfoMapper.update(paymentInfo, new LambdaQueryWrapper<PaymentInfo>()
+                .eq(PaymentInfo::getOutTradeNo, outTradeNo)
+                .eq(PaymentInfo::getPaymentType, name));
+//        this.updatePaymentInfo(outTradeNo, name, paymentInfo);
+    }
+
+    @Override
+    public void updatePaymentInfo(String outTradeNo, String name, PaymentInfo paymentInfo) {
+        paymentInfoMapper.update(paymentInfo, new LambdaQueryWrapper<PaymentInfo>()
+                .eq(PaymentInfo::getOutTradeNo, outTradeNo)
+                .eq(PaymentInfo::getPaymentType, name));
     }
 }

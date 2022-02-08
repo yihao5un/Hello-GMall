@@ -28,4 +28,10 @@ public class PaymentController {
         request.setAttribute("orderInfo", orderInfo);
         return "payment/pay";
     }
+
+    @GetMapping("pay/success.html")
+    public String paySuccess() {
+         // 返回支付成功页面
+        return "payment/success";
+    }
 }

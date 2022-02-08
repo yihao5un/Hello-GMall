@@ -17,4 +17,12 @@ public interface AlipayService {
      * @return String
      */
     String createAliPay(Long orderId) throws AlipayApiException;
+
+    /**
+     * 退款
+     *
+     * @param orderId orderId
+     * @return boolean
+     */
+    boolean refund(Long orderId);
 }

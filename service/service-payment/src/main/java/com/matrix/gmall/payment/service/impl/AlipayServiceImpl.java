@@ -4,8 +4,12 @@ import com.alibaba.fastjson.JSON;
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.AlipayClient;
 import com.alipay.api.request.AlipayTradePagePayRequest;
+import com.alipay.api.request.AlipayTradeRefundRequest;
+import com.alipay.api.response.AlipayTradeRefundResponse;
+import com.matrix.gmall.model.enums.PaymentStatus;
 import com.matrix.gmall.model.enums.PaymentType;
 import com.matrix.gmall.model.order.OrderInfo;
+import com.matrix.gmall.model.payment.PaymentInfo;
 import com.matrix.gmall.order.client.OrderFeignClient;
 import com.matrix.gmall.payment.config.AlipayConfig;
 import com.matrix.gmall.payment.service.AlipayService;
@@ -61,5 +65,38 @@ public class AlipayServiceImpl implements AlipayService {
         String jsonStr = JSON.toJSONString(map);
         alipayRequest.setBizContent(jsonStr);
         return alipayClient.pageExecute(alipayRequest).getBody();
+    }
+
+    @Override
+    public boolean refund(Long orderId) {
+        OrderInfo orderInfo = orderFeignClient.getOrderInfo(orderId);
+        // 声明退款请求对象
+        AlipayTradeRefundRequest request = new AlipayTradeRefundRequest();
+        // 构建Json 字符串
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("out_trade_no",orderInfo.getOutTradeNo());
+        // 退款金额 < 支付金额
+        map.put("refund_amount",orderInfo.getTotalAmount());
+        map.put("refund_reason","退款");
+        request.setBizContent(JSON.toJSONString(map));
+        AlipayTradeRefundResponse response = null;
+        try {
+            response = alipayClient.execute(request);
+        } catch (AlipayApiException e) {
+            e.printStackTrace();
+        }
+        assert response != null;
+        if(response.isSuccess()){
+            System.out.println("调用成功");
+            // 电商平台订单关闭！
+            PaymentInfo updPaymentInfo = new PaymentInfo();
+            updPaymentInfo.setPaymentStatus(PaymentStatus.CLOSED.name());
+            this.paymentService.updatePaymentInfo(orderInfo.getOutTradeNo(),PaymentType.ALIPAY.name(),updPaymentInfo);
+            // 订单状态关闭！
+            return true;
+        } else {
+            System.out.println("调用失败");
+            return false;
+        }
     }
 }
