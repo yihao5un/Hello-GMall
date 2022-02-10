@@ -45,7 +45,7 @@ public class AlipayServiceImpl implements AlipayService {
         paymentService.savePaymentInfo(orderInfo, PaymentType.ALIPAY.name());
         // 1.  生产二维码！  取消订单： 5秒钟;
         // 2.  取消订单了，则不能生产二维码！
-        if ("CLOSED".equals(orderInfo.getOrderStatus())) {
+        if (PaymentStatus.CLOSED.name().equals(orderInfo.getOrderStatus())) {
             return "该订单已经取消！";
         }
         // 获得初始化的AlipayClient 这个已经写成一个配置文件了 所以已经不需要创建这个类了 AlipayClient alipayClient =  new DefaultAlipayClient( "https://openapi.alipay.com/gateway.do" , APP_ID, APP_PRIVATE_KEY, FORMAT, CHARSET, ALIPAY_PUBLIC_KEY, SIGN_TYPE);

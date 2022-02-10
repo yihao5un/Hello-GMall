@@ -76,4 +76,11 @@ public interface OrderService extends IService<OrderInfo> {
      * @return OrderInfo
      */
     OrderInfo getOrderInfo(Long orderId);
+
+    /**
+     * 发送消息给库存
+     *
+     * @param orderId orderId
+     */
+    void sendOrderStatus(Long orderId);
 }

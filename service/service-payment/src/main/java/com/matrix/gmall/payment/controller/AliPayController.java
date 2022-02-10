@@ -3,6 +3,7 @@ package com.matrix.gmall.payment.controller;
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.internal.util.AlipaySignature;
 import com.matrix.gmall.common.result.Result;
+import com.matrix.gmall.model.enums.PaymentStatus;
 import com.matrix.gmall.model.enums.PaymentType;
 import com.matrix.gmall.model.payment.PaymentInfo;
 import com.matrix.gmall.payment.config.AlipayConfig;
@@ -75,7 +76,7 @@ public class AliPayController {
             // 校验各种参数是否正确！
             if ("TRADE_SUCCESS".equals(status) || "TRADE_FINISHED".equals(status)) {
                 //  细节： 防止万一 {当交易状态是支付完成，或者交易结束时} 支付状态是CLOSED 或者是PAID 则返回failure！
-                if ("PAID".equals(paymentInfo.getPaymentStatus()) || "ClOSED".equals(paymentInfo.getPaymentStatus())) {
+                if (PaymentStatus.PAID.name().equals(paymentInfo.getPaymentStatus()) || PaymentStatus.CLOSED.name().equals(paymentInfo.getPaymentStatus())) {
                     return "failure";
                 }
                 //  更新交易记录状态！

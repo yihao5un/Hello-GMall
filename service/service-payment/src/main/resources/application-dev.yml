@@ -25,6 +25,17 @@ spring:
     sleuth:
       sampler:
         probability: 1
+  rabbitmq:
+    host: 192.168.200.128
+    port: 5672
+    username: guest
+    password: guest
+    publisher-confirms: true
+    publisher-returns: true
+    listener:
+      simple:
+        acknowledge-mode: manual #默认情况下消息消费者是自动确认消息的，如果要手动确认消息则需要修改确认模式为manual
+        prefetch: 1 # 消费者每次从队列获取的消息数量。此属性当不设置时为：轮询分发，设置为1为：公平分发
   redis:
     host: 192.168.200.128
     port: 6379

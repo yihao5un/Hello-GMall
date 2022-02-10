@@ -28,5 +28,11 @@
             <artifactId>alipay-sdk-java</artifactId>
             <version>4.22.32.ALL</version>
         </dependency>
+        <!-- rabbit-util -->
+        <dependency>
+            <groupId>com.matrix.gmall</groupId>
+            <artifactId>rabbit-util</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
 </project>
