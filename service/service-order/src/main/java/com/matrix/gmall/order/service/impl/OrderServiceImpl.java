@@ -14,6 +14,7 @@ import com.matrix.gmall.model.order.OrderInfo;
 import com.matrix.gmall.order.mapper.OrderDetailMapper;
 import com.matrix.gmall.order.mapper.OrderInfoMapper;
 import com.matrix.gmall.order.service.OrderService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -179,7 +180,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo> im
      * @param orderInfo orderInfo
      * @return Map<String, Object>
      */
-    private Map<String, Object> initWareOrder(OrderInfo orderInfo) {
+    @Override
+    public Map<String, Object> initWareOrder(OrderInfo orderInfo) {
         Map<String, Object> hashMap = new HashMap<>(16);
         hashMap.put("orderId", orderInfo.getId());
         hashMap.put("consignee", orderInfo.getConsignee());
@@ -202,5 +204,58 @@ public class OrderServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo> im
             detailMapList.add(detailMap);
         });
         return hashMap;
+    }
+
+    @Override
+    public List<OrderInfo> orderSplit(String orderId, String wareSkuMap) {
+        /*
+            1.  先获取到的原始订单！
+            2.  需要根据wareSkuMap
+                [
+                    {"wareId":"1","skuIds":["2","10"]},
+                    {"wareId":"2","skuIds":["3"]}
+                ]
+                转换为能操作的数据！
+            3.  生成新的子订单，并赋值 ,保存子订单!
+            4.  将子订单添加到集合中！
+            5.  修改原始订单状态！
+         */
+        List<OrderInfo> subOrderInfoList = new ArrayList<>();
+        OrderInfo orderInfoOrigin = this.getOrderInfo(Long.parseLong(orderId));
+        // 注意返回的时是一个List
+        List<Map> mapList = JSON.parseArray(wareSkuMap, Map.class);
+        if (!CollectionUtils.isEmpty(mapList)) {
+            mapList.forEach(map -> {
+                String wareId = (String) map.get("wareId");
+                List<String> skuIds = (List<String>) map.get("skuIds");
+                OrderInfo subOrderInfo = new OrderInfo();
+                // 复制对象
+                BeanUtils.copyProperties(orderInfoOrigin, subOrderInfo);
+
+                subOrderInfo.setParentOrderId(Long.parseLong(orderId));
+                subOrderInfo.setId(null);
+                subOrderInfo.setWareId(wareId);
+                List<OrderDetail> orderDetailList = orderInfoOrigin.getOrderDetailList();
+                List<OrderDetail> orderDetails = new ArrayList<>();
+                orderDetailList.forEach(orderDetail -> {
+                    skuIds.forEach(skuId -> {
+                        if (Long.parseLong(skuId) == orderDetail.getSkuId()) {
+                            // 得到当前仓库的订单明细
+                            orderDetails.add(orderDetail);
+                        }
+                    });
+                });
+                // 给子订单赋值订单明细
+                subOrderInfo.setOrderDetailList(orderDetails);
+                subOrderInfo.sumTotalAmount();
+                // 保存子订单
+                saveOrderInfo(subOrderInfo);
+                // 将子订单添加到集合中
+                subOrderInfoList.add(subOrderInfo);
+            });
+        }
+        // 修改原始订单状态
+        this.updateOrderStatus(Long.parseLong(orderId), ProcessStatus.SPLIT);
+        return subOrderInfoList;
     }
 }

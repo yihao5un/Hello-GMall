@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.matrix.gmall.model.enums.ProcessStatus;
 import com.matrix.gmall.model.order.OrderInfo;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * @Author: yihaosun
  * @Date: 2021/12/6 22:28
@@ -83,4 +86,21 @@ public interface OrderService extends IService<OrderInfo> {
      * @param orderId orderId
      */
     void sendOrderStatus(Long orderId);
+
+    /**
+     * 将OrderInfo数据变成Map集合
+     *
+     * @param orderInfo orderInfo
+     * @return Map<String, Object>
+     */
+    Map<String, Object> initWareOrder(OrderInfo orderInfo);
+
+    /**
+     * 拆单方法(仓库不同的时候)
+     *
+     * @param orderId orderId
+     * @param wareSkuMap wareSkuMap
+     * @return List<OrderInfo>
+     */
+    List<OrderInfo> orderSplit(String orderId, String wareSkuMap);
 }

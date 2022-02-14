@@ -55,8 +55,7 @@ public class WareConsumer {
         WareOrderTask wareOrderTask = JSON.parseObject(orderTaskJson, WareOrderTask.class);
         wareOrderTask.setTaskStatus(TaskStatus.PAID.name());
         gwareService.saveWareOrderTask(wareOrderTask);
-        // 检查是否拆单！  看商品是否在同一个仓库中！如果在同一个仓库，则不会发生拆单，否则拆单！
-
+        // 检查是否拆单！看商品是否在同一个仓库中！如果在同一个仓库，则不会发生拆单，否则拆单！
         List<WareOrderTask> wareSubOrderTaskList = gwareService.checkOrderSplit(wareOrderTask);
         if (wareSubOrderTaskList != null && wareSubOrderTaskList.size() >= 2) {
             for (WareOrderTask orderTask : wareSubOrderTaskList) {

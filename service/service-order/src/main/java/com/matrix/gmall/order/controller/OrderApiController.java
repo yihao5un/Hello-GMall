@@ -1,5 +1,7 @@
 package com.matrix.gmall.order.controller;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.matrix.gmall.cart.client.CartFeignClient;
 import com.matrix.gmall.common.result.Result;
 import com.matrix.gmall.common.util.AuthContextHolder;
@@ -164,5 +166,19 @@ public class OrderApiController {
     @GetMapping("inner/getOrderInfo/{orderId}")
     public OrderInfo getOrderInfo(@PathVariable("orderId") Long orderId) {
         return orderService.getOrderInfo(orderId);
+    }
+
+    @PostMapping("orderSplit")
+    public String orderSplit(HttpServletRequest request) {
+        String orderId = request.getParameter("orderId");
+        String wareSkuMap = request.getParameter("wareSkuMap");
+        List<OrderInfo> orderInfoList = orderService.orderSplit(orderId, wareSkuMap);
+        List<Map<String, Object>> orderInfoListMap = new ArrayList<>();
+        orderInfoList.forEach(orderInfo -> {
+            Map<String, Object> map = orderService.initWareOrder(orderInfo);
+            orderInfoListMap.add(map);
+        });
+        // 返回数据
+        return JSON.toJSONString(orderInfoListMap);
     }
 }
