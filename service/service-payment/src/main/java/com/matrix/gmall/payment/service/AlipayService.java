@@ -25,4 +25,20 @@ public interface AlipayService {
      * @return boolean
      */
     boolean refund(Long orderId);
+
+    /**
+     * 关闭交易
+     *
+     * @param orderId orderId
+     * @return boolean
+     */
+    boolean closePay(Long orderId);
+
+    /**
+     * 查询支付宝是否有交易记录
+     *
+     * @param orderId orderId
+     * @return Boolean
+     */
+    boolean checkPayment(Long orderId);
 }

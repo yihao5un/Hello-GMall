@@ -1,7 +1,6 @@
 package com.matrix.gmall.order.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.matrix.gmall.common.constant.MqConst;
@@ -127,6 +126,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo> im
 //        orderInfoMapper.updateById(orderInfo);
         // TODO 后续需要订单状态和订单进度状态的更新 {@link #updateOrderStatus(Long orderId, ProcessStatus processStatus)} 用一个方法就可以更新两个状态
         updateOrderStatus(orderId, ProcessStatus.CLOSED);
+        // 关闭交易 order -> payment -> alipay
+        // 发送一个消息关闭交易记录到payment
+        rabbitService.sendMessage(MqConst.EXCHANGE_DIRECT_PAYMENT_CLOSE, MqConst.ROUTING_PAYMENT_CLOSE, orderId);
     }
 
     @Override

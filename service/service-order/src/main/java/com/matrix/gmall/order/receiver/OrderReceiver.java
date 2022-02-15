@@ -1,7 +1,6 @@
 package com.matrix.gmall.order.receiver;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.matrix.gmall.common.constant.MqConst;
 import com.matrix.gmall.model.enums.OrderStatus;
 import com.matrix.gmall.model.enums.ProcessStatus;
@@ -18,11 +17,8 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
-
-import static com.matrix.gmall.model.enums.OrderStatus.DELEVERED;
 
 /**
  * @author yihaosun
@@ -35,6 +31,7 @@ public class OrderReceiver {
 
     /**
      * 取消订单的业务逻辑
+     *
      * @param orderId orderId
      */
     @RabbitListener(queues = MqConst.QUEUE_ORDER_CANCEL)
@@ -47,13 +44,14 @@ public class OrderReceiver {
             if (Objects.nonNull(orderInfo) && OrderStatus.CLOSED.name().equals(orderInfo.getOrderStatus()) && OrderStatus.CLOSED.name().equals(orderInfo.getProcessStatus())) {
                 // 修改订单状态 -> 变成CLOSED
                 orderService.execExpiredOrder(orderId);
-                // TODO 还需要修改支付宝的状态
+                // TODO 可能还需要修改支付宝的状态
             }
         }
     }
 
     /**
      * 更新订单状态
+     *
      * @param orderId orderId
      * @param message message
      * @param channel channel

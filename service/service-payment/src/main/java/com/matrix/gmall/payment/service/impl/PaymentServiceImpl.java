@@ -82,5 +82,18 @@ public class PaymentServiceImpl implements PaymentService {
                 .eq(PaymentInfo::getPaymentType, name));
     }
 
+    @Override
+    public void closePaymentInfo(Long orderId) {
+        // 在生成二维码的时候要才会有PaymentInfo的记录 先判断一下时候有记录
+        Integer count = paymentInfoMapper.selectCount(new LambdaQueryWrapper<PaymentInfo>().eq(PaymentInfo::getOrderId, orderId));
+        if (count.equals(0)) {
+            // 直接返回即可
+            return;
+        }
 
+        // 更新
+        PaymentInfo paymentInfo = new PaymentInfo();
+        paymentInfo.setPaymentStatus(PaymentStatus.CLOSED.name());
+        paymentInfoMapper.update(paymentInfo, new LambdaQueryWrapper<PaymentInfo>().eq(PaymentInfo::getOrderId, orderId));
+    }
 }

@@ -3,8 +3,12 @@ package com.matrix.gmall.payment.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.AlipayClient;
+import com.alipay.api.request.AlipayTradeCloseRequest;
 import com.alipay.api.request.AlipayTradePagePayRequest;
+import com.alipay.api.request.AlipayTradeQueryRequest;
 import com.alipay.api.request.AlipayTradeRefundRequest;
+import com.alipay.api.response.AlipayTradeCloseResponse;
+import com.alipay.api.response.AlipayTradeQueryResponse;
 import com.alipay.api.response.AlipayTradeRefundResponse;
 import com.matrix.gmall.model.enums.PaymentStatus;
 import com.matrix.gmall.model.enums.PaymentType;
@@ -14,6 +18,7 @@ import com.matrix.gmall.order.client.OrderFeignClient;
 import com.matrix.gmall.payment.config.AlipayConfig;
 import com.matrix.gmall.payment.service.AlipayService;
 import com.matrix.gmall.payment.service.PaymentService;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -98,5 +103,45 @@ public class AlipayServiceImpl implements AlipayService {
             System.out.println("调用失败");
             return false;
         }
+    }
+
+    /**
+     * Case1: 扫完之后 未支付 可以关闭 关闭成功!
+     * Case2: 扫完之后 支付成功 不可以关闭 关闭失败!
+     *
+     * @param orderId orderId
+     * @return boolean
+     */
+    @SneakyThrows
+    @Override
+    public boolean closePay(Long orderId) {
+        // 根据orderId 获取orderInfo
+        OrderInfo orderInfo = orderFeignClient.getOrderInfo(orderId);
+        // 创建关闭对象
+        AlipayTradeCloseRequest request = new AlipayTradeCloseRequest();
+        HashMap<String, Object> map = new HashMap<>(16);
+        map.put("out_trade_no", orderInfo.getOutTradeNo());
+        map.put("operator_id", "MATRIX");
+        request.setBizContent(JSON.toJSONString(map));
+        AlipayTradeCloseResponse response = null;
+        response = alipayClient.execute(request);
+        assert response != null;
+        return response.isSuccess();
+    }
+
+    @SneakyThrows
+    @Override
+    public boolean checkPayment(Long orderId) {
+        // 根据orderId 获取orderInfo
+        OrderInfo orderInfo = orderFeignClient.getOrderInfo(orderId);
+        AlipayTradeQueryRequest request = new AlipayTradeQueryRequest();
+        // 构建参数
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("out_trade_no",orderInfo.getOutTradeNo());
+        request.setBizContent(JSON.toJSONString(map));
+        AlipayTradeQueryResponse response = null;
+        response = alipayClient.execute(request);
+        assert response != null;
+        return response.isSuccess();
     }
 }

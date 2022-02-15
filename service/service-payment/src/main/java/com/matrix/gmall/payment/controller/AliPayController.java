@@ -96,4 +96,36 @@ public class AliPayController {
         boolean flag = alipayService.refund(orderId);
         return Result.ok(flag);
     }
+
+    @GetMapping("closePay/{orderId}")
+    @ResponseBody
+    public Result<Boolean> closePay(@PathVariable Long orderId) {
+        boolean flag = alipayService.closePay(orderId);
+        return Result.ok(flag);
+    }
+
+    /**
+     * 查询支付宝是否有交易记录
+     *
+     * @param orderId orderId
+     * @return Boolean
+     */
+    @RequestMapping("checkPayment/{orderId}")
+    @ResponseBody
+    public Result<Boolean> checkPayment(@PathVariable Long orderId){
+        // 调用退款接口
+        return Result.ok(alipayService.checkPayment(orderId));
+    }
+
+    /**
+     * 查询本地是否有交易记录！
+     *
+     * @param outTradeNo outTradeNo
+     * @return PaymentInfo
+     */
+    @GetMapping("getPaymentInfo/{outTradeNo}")
+    @ResponseBody
+    public Result<PaymentInfo> getPaymentInfo(@PathVariable String outTradeNo){
+        return Result.ok(paymentService.getPaymentInfo(outTradeNo, PaymentType.ALIPAY.name()));
+    }
 }
