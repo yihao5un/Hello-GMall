@@ -103,4 +103,12 @@ public interface OrderService extends IService<OrderInfo> {
      * @return List<OrderInfo>
      */
     List<OrderInfo> orderSplit(String orderId, String wareSkuMap);
+
+    /**
+     * 关闭过期订单
+     *
+     * @param orderId orderId
+     * @param flag 是否需要关闭paymentInfo
+     */
+    void execExpiredOrder(Long orderId, String flag);
 }

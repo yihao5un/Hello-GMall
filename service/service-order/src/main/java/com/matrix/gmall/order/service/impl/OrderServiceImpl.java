@@ -260,4 +260,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderInfoMapper, OrderInfo> im
         this.updateOrderStatus(Long.parseLong(orderId), ProcessStatus.SPLIT);
         return subOrderInfoList;
     }
+
+    @Override
+    public void execExpiredOrder(Long orderId, String flag) {
+        updateOrderStatus(orderId, ProcessStatus.CLOSED);
+        if ("2".equals(flag)) {
+            rabbitService.sendMessage(MqConst.EXCHANGE_DIRECT_PAYMENT_CLOSE, MqConst.ROUTING_PAYMENT_CLOSE, orderId);
+        }
+    }
 }
