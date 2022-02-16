@@ -18,6 +18,7 @@ import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -40,8 +41,9 @@ public class OrderReceiver {
      *
      * @param orderId orderId
      */
+    @SneakyThrows
     @RabbitListener(queues = MqConst.QUEUE_ORDER_CANCEL)
-    public void orderCancel(Long orderId) {
+    public void orderCancel(Long orderId, Message message, Channel channel) {
         // 取消订单的业务逻辑
         // TODO 制作配置类 设置队列、交换机以及绑定关系 {@link com.matrix.gmall.order.config.OrderCancelMqConfig}
         if (Objects.nonNull(orderId)) {
@@ -72,6 +74,7 @@ public class OrderReceiver {
                 // TODO 可能还需要修改支付宝的状态
             }
         }
+        channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
     }
 
     /**

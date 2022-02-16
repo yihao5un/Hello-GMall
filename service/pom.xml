@@ -21,6 +21,8 @@
         <module>service-order</module>
         <module>service-mq</module>
         <module>service-payment</module>
+        <module>service-activity</module>
+        <module>service-task</module>
     </modules>
 
     <!-- 充当一个父亲工程 -->

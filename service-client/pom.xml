@@ -17,6 +17,7 @@
         <module>service-user-client</module>
         <module>service-order-client</module>
         <module>service-payment-client</module>
+        <module>service-activity-client</module>
     </modules>
     <!-- packaging 为 pom 表示父工程-->
     <packaging>pom</packaging>
