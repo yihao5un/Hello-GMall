@@ -41,8 +41,7 @@ public class SecKillReceiver {
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = MqConst.QUEUE_TASK_1, durable = "true", autoDelete = "false"),
             exchange = @Exchange(value = MqConst.EXCHANGE_DIRECT_TASK),
-            key = {MqConst.ROUTING_TASK_1}
-    ))
+            key = {MqConst.ROUTING_TASK_1}))
     @SneakyThrows
     public void importToRedis(Message message, Channel channel) {
         // 查询当天的秒杀商品集合
@@ -71,6 +70,8 @@ public class SecKillReceiver {
                     // 每卖出一个就 rightPop() 一个 为0的时候 库存就没有了
                     redisTemplate.boundListOps(key).leftPush(seckillGood.getSkuId().toString());
                 }
+                // 状态位初始化为1 使用redis的发布/订阅模式
+                redisTemplate.convertAndSend("seckillpush", seckillGood.getSkuId() + "1");
             });
         }
         channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
