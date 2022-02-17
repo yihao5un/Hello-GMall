@@ -29,6 +29,7 @@ public class ScheduledTask {
      * 0/30 * * * * ? 每隔30s执行一下
      *
      * 0 0 1 * * ? 每天凌晨1点执行代码
+     * {@link com.matrix.gmall.activity.receiver.SecKillReceiver#importToRedis()}
      */
     @Scheduled(cron = "* * * * * ?")
     public void sendMsg() {
