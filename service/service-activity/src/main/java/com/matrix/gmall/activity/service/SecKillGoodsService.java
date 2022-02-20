@@ -24,4 +24,12 @@ public interface SecKillGoodsService {
      * @return SeckillGoods
      */
     SeckillGoods findSeckillGoodsById(Long skuId);
+
+    /**
+     * 监听消息 预下单
+     *
+     * @param skuId skuId
+     * @param userId userId
+     */
+    void seckillOrder(Long skuId, String userId);
 }

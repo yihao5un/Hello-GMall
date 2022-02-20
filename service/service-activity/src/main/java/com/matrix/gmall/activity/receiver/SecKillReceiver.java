@@ -2,10 +2,12 @@ package com.matrix.gmall.activity.receiver;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.matrix.gmall.activity.mapper.SecKillGoodsMapper;
+import com.matrix.gmall.activity.service.SecKillGoodsService;
 import com.matrix.gmall.common.constant.MqConst;
 import com.matrix.gmall.common.constant.RedisConst;
 import com.matrix.gmall.common.util.DateUtil;
 import com.matrix.gmall.model.activity.SeckillGoods;
+import com.matrix.gmall.model.activity.UserRecorde;
 import com.rabbitmq.client.Channel;
 import lombok.SneakyThrows;
 import org.springframework.amqp.core.Message;
@@ -34,6 +36,9 @@ public class SecKillReceiver {
 
     @Autowired
     private RedisTemplate<Object, Object> redisTemplate;
+
+    @Autowired
+    private SecKillGoodsService secKillGoodsService;
 
     /**
      * 监听消息 将秒杀商品数据放入缓存
@@ -73,6 +78,21 @@ public class SecKillReceiver {
                 // 状态位初始化为1 使用redis的发布/订阅模式
                 redisTemplate.convertAndSend("seckillpush", seckillGood.getSkuId() + "1");
             });
+        }
+        channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+    }
+
+    /**
+     * 监听消息 预下单
+     */
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = MqConst.QUEUE_TASK_1, durable = "true", autoDelete = "false"),
+            exchange = @Exchange(value = MqConst.EXCHANGE_DIRECT_TASK),
+            key = {MqConst.ROUTING_TASK_1}))
+    @SneakyThrows
+    public void seckill(UserRecorde userRecorde, Message message, Channel channel) {
+        if (userRecorde != null) {
+            secKillGoodsService.seckillOrder(userRecorde.getSkuId(), userRecorde.getUserId());
         }
         channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
     }

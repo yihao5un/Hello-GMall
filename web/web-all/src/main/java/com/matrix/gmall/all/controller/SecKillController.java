@@ -3,6 +3,7 @@ package com.matrix.gmall.all.controller;
 import com.matrix.gmall.activity.client.ActivityFeignClient;
 import com.matrix.gmall.common.result.Result;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +18,7 @@ import java.util.Map;
  */
 @Controller
 public class SecKillController {
+    @Qualifier("com.matrix.gmall.activity.client.ActivityFeignClient")
     @Autowired
     private ActivityFeignClient activityFeignClient;
 
