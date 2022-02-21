@@ -3,20 +3,28 @@ package com.matrix.gmall.activity.controller;
 import com.matrix.gmall.activity.service.SecKillGoodsService;
 import com.matrix.gmall.activity.util.CacheHelper;
 import com.matrix.gmall.common.constant.MqConst;
+import com.matrix.gmall.common.constant.RedisConst;
 import com.matrix.gmall.common.result.Result;
 import com.matrix.gmall.common.result.ResultCodeEnum;
 import com.matrix.gmall.common.service.RabbitService;
 import com.matrix.gmall.common.util.AuthContextHolder;
 import com.matrix.gmall.common.util.DateUtil;
 import com.matrix.gmall.common.util.MD5;
+import com.matrix.gmall.model.activity.OrderRecode;
 import com.matrix.gmall.model.activity.SeckillGoods;
 import com.matrix.gmall.model.activity.UserRecorde;
+import com.matrix.gmall.model.order.OrderDetail;
+import com.matrix.gmall.model.user.UserAddress;
+import com.matrix.gmall.user.client.UserFeignClient;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Date;
+import java.util.*;
 
 /**
  * @author yihaosun
@@ -30,6 +38,12 @@ public class SecKillGoodsApiController {
 
     @Autowired
     private RabbitService rabbitService;
+
+    @Autowired
+    private UserFeignClient userFeignClient;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @GetMapping("findAll")
     public Result<Object> findAll() {
@@ -71,7 +85,7 @@ public class SecKillGoodsApiController {
     public Result<String> seckillOrder(@PathVariable Long skuId, HttpServletRequest request) {
         String skuIdStr = request.getParameter("skuIdStr");
         String userId = AuthContextHolder.getUserId(request);
-        if (! skuIdStr.equals(MD5.encrypt(userId))) {
+        if (!skuIdStr.equals(MD5.encrypt(userId))) {
             // 下单码不正确
             return Result.build(null, ResultCodeEnum.SECKILL_ILLEGAL);
         }
@@ -80,7 +94,7 @@ public class SecKillGoodsApiController {
         if (StringUtils.isEmpty(state)) {
             // 请求不合法
             return Result.build(null, ResultCodeEnum.SECKILL_ILLEGAL);
-        } else if("0".equals(state)) {
+        } else if ("0".equals(state)) {
             // 已售空
             return Result.build(null, ResultCodeEnum.SECKILL_FINISH);
         } else {
@@ -98,5 +112,33 @@ public class SecKillGoodsApiController {
     public Result checkOrder(@PathVariable Long skuId, HttpServletRequest request) {
         String userId = AuthContextHolder.getUserId(request);
         return secKillGoodsService.checkOrder(skuId, userId);
+    }
+
+    @GetMapping("auth/trade")
+    public Result seckillTrade(HttpServletRequest request) {
+        Map<String, Object> map = new HashMap<>();
+        String userId = AuthContextHolder.getUserId(request);
+        // 远程调用 feign
+        List<UserAddress> userAddressList = userFeignClient.findUserAddressListByUserId(userId);
+        String orderKey = RedisConst.SECKILL_ORDERS;
+        OrderRecode orderRecode = (OrderRecode) redisTemplate.boundHashOps(orderKey).get(userId);
+
+        if (orderRecode == null) {
+            return Result.fail().message("下单失败");
+        }
+        // 获取到当前的秒杀商品
+        SeckillGoods seckillGoods = orderRecode.getSeckillGoods();
+
+        List<OrderDetail> detailArrayList = new ArrayList<>();
+        OrderDetail orderDetail = new OrderDetail();
+        BeanUtils.copyProperties(seckillGoods, orderDetail);
+        detailArrayList.add(orderDetail);
+
+        map.put("detailArrayList", detailArrayList);
+        map.put("userAddressList", userAddressList);
+        map.put("totalNum", "1");
+        map.put("totalAmount", seckillGoods.getCostPrice());
+        //  返回数据
+        return Result.ok();
     }
 }

@@ -33,8 +33,9 @@ public interface ActivityFeignClient {
 
 
     /**
-     * 
-     * @return
+     * 下单
+     *
+     * @return Result<Map<String, Object>>
      */
     @GetMapping("/api/activity/seckill/auth/trade")
     Result<Map<String, Object>> trade();

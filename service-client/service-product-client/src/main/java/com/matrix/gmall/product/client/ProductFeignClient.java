@@ -14,7 +14,7 @@ import java.util.Map;
 
 /**
  * 发布到Feign上面
- * 调用 service-product api 中的服务
+ * 调用 service-product api (注意是控制器中的路径) 中的服务
  * FeignClient 调用的名字value 是service-product 中 application.yml 中的 spring.application.name 中的名字
  * fallback 是指如果失败了的处理
  * 这是一个接口 供service-item 去调用
