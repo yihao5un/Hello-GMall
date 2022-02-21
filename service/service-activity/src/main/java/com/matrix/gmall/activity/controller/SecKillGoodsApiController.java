@@ -93,4 +93,10 @@ public class SecKillGoodsApiController {
             return Result.ok();
         }
     }
+
+    @GetMapping("auth/checkOrder/{skuId}")
+    public Result checkOrder(@PathVariable Long skuId, HttpServletRequest request) {
+        String userId = AuthContextHolder.getUserId(request);
+        return secKillGoodsService.checkOrder(skuId, userId);
+    }
 }

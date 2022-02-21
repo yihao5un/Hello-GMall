@@ -37,5 +37,5 @@ public class RedisConst {
     public static final String SECKILL_USER = "seckill:user:";
 
     //用户锁定时间 单位：秒
-    public static final int SECKILL__TIMEOUT = 60 * 60 * 1;
+    public static final int SECKILL_TIMEOUT = 60 * 60 * 1;
 }
