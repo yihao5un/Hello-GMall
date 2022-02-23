@@ -86,14 +86,52 @@ public class SecKillReceiver {
      * 监听消息 预下单
      */
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = MqConst.QUEUE_TASK_1, durable = "true", autoDelete = "false"),
-            exchange = @Exchange(value = MqConst.EXCHANGE_DIRECT_TASK),
-            key = {MqConst.ROUTING_TASK_1}))
+            value = @Queue(value = MqConst.QUEUE_SECKILL_USER, durable = "true", autoDelete = "false"),
+            exchange = @Exchange(value = MqConst.EXCHANGE_DIRECT_SECKILL_USER),
+            key = {MqConst.ROUTING_SECKILL_USER}))
     @SneakyThrows
     public void seckill(UserRecorde userRecorde, Message message, Channel channel) {
         if (userRecorde != null) {
             secKillGoodsService.seckillOrder(userRecorde.getSkuId(), userRecorde.getUserId());
         }
+        channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+    }
+
+    /**
+     * 监听队列 删除缓存
+     *
+     * @param message message
+     * @param channel channel
+     */
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = MqConst.QUEUE_TASK_18, durable = "true", autoDelete = "false"),
+            exchange = @Exchange(value = MqConst.EXCHANGE_DIRECT_TASK),
+            key = {MqConst.ROUTING_TASK_18}))
+    @SneakyThrows
+    public void clearRedis(Message message, Channel channel) {
+        // 查询秒杀结束的商品
+        List<SeckillGoods> seckillGoodsList = secKillGoodsMapper.selectList(new LambdaQueryWrapper<SeckillGoods>()
+                .eq(SeckillGoods::getStatus, 1)
+                .le(SeckillGoods::getEndTime, new Date()));
+        // 从redis中删除
+        if (!CollectionUtils.isEmpty(seckillGoodsList)) {
+            // 如果秒杀的商品有多个 用如下方式删除
+            // e.g: seckillGoodsList.forEach(seckillGoods -> redisTemplate.boundHashOps(RedisConst.SECKILL_GOODS).delete(seckillGoods.getSkuId()));
+            // 删除库存数量
+            seckillGoodsList.forEach(seckillGoods -> redisTemplate.delete(RedisConst.SECKILL_STOCK_PREFIX + seckillGoods.getSkuId()));
+        }
+        redisTemplate.delete(RedisConst.SECKILL_GOODS);
+        redisTemplate.delete(RedisConst.SECKILL_ORDERS);
+        // 删除真正的订单
+        redisTemplate.delete(RedisConst.SECKILL_ORDERS_USERS);
+
+        // 修改数据库 秒杀的所有商品状态全部改为2
+        SeckillGoods seckillGoods = new SeckillGoods();
+        seckillGoods.setStatus("2");
+        secKillGoodsMapper.update(seckillGoods, new LambdaQueryWrapper<SeckillGoods>()
+                .eq(SeckillGoods::getStatus, 1)
+                .le(SeckillGoods::getEndTime, new Date()));
+
         channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
     }
 }

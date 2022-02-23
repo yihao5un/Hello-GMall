@@ -33,6 +33,11 @@ public class ScheduledTask {
      */
     @Scheduled(cron = "* * * * * ?")
     public void sendMsg() {
-        rabbitService.sendMessage(MqConst.EXCHANGE_DIRECT_TASK, MqConst.ROUTING_TASK_1, "Task...");
+        rabbitService.sendMessage(MqConst.EXCHANGE_DIRECT_TASK, MqConst.ROUTING_TASK_1, "send...");
+    }
+
+    @Scheduled(cron = "0 0 18 * * ?")
+    public void clearRedis() {
+        rabbitService.sendMessage(MqConst.EXCHANGE_DIRECT_TASK, MqConst.ROUTING_TASK_18, "del...");
     }
 }

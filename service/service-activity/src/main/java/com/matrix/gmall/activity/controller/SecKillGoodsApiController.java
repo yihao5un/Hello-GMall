@@ -14,10 +14,11 @@ import com.matrix.gmall.model.activity.OrderRecode;
 import com.matrix.gmall.model.activity.SeckillGoods;
 import com.matrix.gmall.model.activity.UserRecorde;
 import com.matrix.gmall.model.order.OrderDetail;
+import com.matrix.gmall.model.order.OrderInfo;
 import com.matrix.gmall.model.user.UserAddress;
+import com.matrix.gmall.order.client.OrderFeignClient;
 import com.matrix.gmall.user.client.UserFeignClient;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -44,6 +45,9 @@ public class SecKillGoodsApiController {
 
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private OrderFeignClient orderFeignClient;
 
     @GetMapping("findAll")
     public Result<Object> findAll() {
@@ -139,6 +143,22 @@ public class SecKillGoodsApiController {
         map.put("totalNum", "1");
         map.put("totalAmount", seckillGoods.getCostPrice());
         //  返回数据
-        return Result.ok();
+        return Result.ok(map);
+    }
+
+    @PostMapping("/auth/submitOrder")
+    public Result submitOrder(@RequestBody OrderInfo orderInfo, HttpServletRequest request) {
+        String userId = AuthContextHolder.getUserId(request);
+        orderInfo.setUserId(Long.parseLong(userId));
+        // 远程调用service-order 的 feign-client
+        Long orderId = orderFeignClient.submitOrder(orderInfo);
+        if (Objects.isNull(orderId)) {
+            return Result.fail().message("提交订单失败");
+        }
+        // 删除缓存的信息: setnx的信息 预下单的
+        redisTemplate.boundHashOps(RedisConst.SECKILL_ORDERS).delete(userId);
+        // 存储一个真正下单的数据到缓存
+        redisTemplate.boundHashOps(RedisConst.SECKILL_ORDERS_USERS).put(userId, orderId.toString());
+        return Result.ok(orderId);
     }
 }

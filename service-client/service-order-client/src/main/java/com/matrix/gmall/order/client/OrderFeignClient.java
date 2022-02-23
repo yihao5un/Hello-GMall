@@ -6,6 +6,8 @@ import com.matrix.gmall.order.client.imp.OrderDegradeFeignClient;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Map;
 
@@ -33,4 +35,13 @@ public interface OrderFeignClient {
      */
     @GetMapping("/api/order/inner/getOrderInfo/{orderId}")
     OrderInfo getOrderInfo(@PathVariable(value = "orderId") Long orderId);
+
+    /**
+     * 下单
+     *
+     * @param orderInfo orderInfo
+     * @return orderId
+     */
+    @PostMapping("/api/order/inner/seckill/submitOrder")
+    Long submitOrder(@RequestBody OrderInfo orderInfo);
 }

@@ -181,4 +181,9 @@ public class OrderApiController {
         // 返回数据
         return JSON.toJSONString(orderInfoListMap);
     }
+
+    @PostMapping("inner/seckill/submitOrder")
+    public Long submitOrder(@RequestBody OrderInfo orderInfo) {
+        return orderService.saveOrderInfo(orderInfo);
+    }
 }
