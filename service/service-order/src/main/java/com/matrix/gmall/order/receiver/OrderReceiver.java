@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
@@ -44,37 +45,44 @@ public class OrderReceiver {
     @SneakyThrows
     @RabbitListener(queues = MqConst.QUEUE_ORDER_CANCEL)
     public void orderCancel(Long orderId, Message message, Channel channel) {
-        // 取消订单的业务逻辑
-        // TODO 制作配置类 设置队列、交换机以及绑定关系 {@link com.matrix.gmall.order.config.OrderCancelMqConfig}
-        if (Objects.nonNull(orderId)) {
-            OrderInfo orderInfo = orderService.getById(orderId);
-            // 订单状态和支付状态都为未付款的
-            if (Objects.nonNull(orderInfo) && OrderStatus.CLOSED.name().equals(orderInfo.getOrderStatus()) && OrderStatus.CLOSED.name().equals(orderInfo.getProcessStatus())) {
-                // 判断是否存在电商交易记录
-                PaymentInfo paymentInfo = paymentFeignClient.getPaymentInfo(orderInfo.getOutTradeNo());
-                if (Objects.nonNull(paymentInfo) && PaymentStatus.UNPAID.name().equals(paymentInfo.getPaymentStatus())) {
-                    // 说明电商本地有交易记录 要关闭paymentInfo
-                    // 调用查询支付宝的交易记录
-                    Boolean result = paymentFeignClient.checkPayment(orderId);
-                    if (Boolean.TRUE.equals(result)) {
-                        Boolean flag = paymentFeignClient.closePay(orderId);
-                        if (Boolean.TRUE.equals(flag)) {
-                            // 表示未支付
+        try {
+            // 取消订单的业务逻辑
+            // TODO 制作配置类 设置队列、交换机以及绑定关系 {@link com.matrix.gmall.order.config.OrderCancelMqConfig}
+            if (Objects.nonNull(orderId)) {
+                OrderInfo orderInfo = orderService.getById(orderId);
+                // 订单状态和支付状态都为未付款的
+                if (Objects.nonNull(orderInfo) && OrderStatus.CLOSED.name().equals(orderInfo.getOrderStatus()) && OrderStatus.CLOSED.name().equals(orderInfo.getProcessStatus())) {
+                    // 判断是否存在电商交易记录
+                    PaymentInfo paymentInfo = paymentFeignClient.getPaymentInfo(orderInfo.getOutTradeNo());
+                    if (Objects.nonNull(paymentInfo) && PaymentStatus.UNPAID.name().equals(paymentInfo.getPaymentStatus())) {
+                        // 说明电商本地有交易记录 要关闭paymentInfo
+                        // 调用查询支付宝的交易记录
+                        Boolean result = paymentFeignClient.checkPayment(orderId);
+                        if (Boolean.TRUE.equals(result)) {
+                            Boolean flag = paymentFeignClient.closePay(orderId);
+                            if (Boolean.TRUE.equals(flag)) {
+                                // 表示未支付
+                                orderService.execExpiredOrder(orderId, "2");
+                            } // 否则表示支付成功 用户正常支付成功
+                        } else {
+                            // 关闭orderInfo和paymentInfo
                             orderService.execExpiredOrder(orderId, "2");
-                        } // 否则表示支付成功 用户正常支付成功
+                        }
                     } else {
-                        // 关闭orderInfo和paymentInfo
-                        orderService.execExpiredOrder(orderId, "2");
+                        // 只关闭订单即可
+                        // 修改订单状态 -> 变成CLOSED
+                        orderService.execExpiredOrder(orderId, "1");
                     }
-                } else {
-                    // 只关闭订单即可
-                    // 修改订单状态 -> 变成CLOSED
-                    orderService.execExpiredOrder(orderId, "1");
+                    // TODO 可能还需要修改支付宝的状态
                 }
-                // TODO 可能还需要修改支付宝的状态
             }
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (IOException e) {
+            e.printStackTrace();
+            // 消费失败
+            channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+            // 将这条数据记录到未消费日志表中 后续人工处理
         }
-        channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
     }
 
     /**
